@@ -51,18 +51,23 @@ private struct PlaceholderView: View {
 
             VStack(spacing: AppSpacing.md) {
                 Image(systemName: icon)
-                    .font(.system(size: 42))
+                    .font(.system(size: 42, weight: .semibold))
                     .foregroundStyle(AppColors.primary)
+                    .frame(width: 70, height: 70)
                     .glow(AppColors.primary)
 
                 Text(title)
                     .font(AppTypography.title)
                     .foregroundStyle(AppColors.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .center)
 
                 Text("Placeholder")
                     .font(AppTypography.body)
                     .foregroundStyle(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding(.horizontal, AppSpacing.lg)
         }
     }
 }
