@@ -1,0 +1,11 @@
+//
+//  InfoPlist.strings
+//  Echoes
+//
+//  Created by Sara Lindén on 2026-05-17.
+//
+
+NSLocationWhenInUseUsageDescription = "Vi använder din plats för att visa minnen nära dig på kartan.";
+NSMicrophoneUsageDescription = "Vi använder mikrofonen så att du kan spela in ljudminnen.";
+NSCameraUsageDescription = "Vi använder kameran så att du kan lägga till bilder till dina minnen.";
+NSPhotoLibraryUsageDescription = "Vi använder ditt bildbibliotek så att du kan välja bilder till dina minnen.";
