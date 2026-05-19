@@ -22,8 +22,13 @@ class AuthViewModel {
     // MARK: - Register (new account)
 
     func register(name: String, email: String, password: String, context: ModelContext) {
-        guard !name.trimmingCharacters(in: .whitespaces).isEmpty,
-              !email.trimmingCharacters(in: .whitespaces).isEmpty,
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedEmail = email
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        guard !trimmedName.isEmpty,
+              !normalizedEmail.isEmpty,
               !password.isEmpty else {
             errorMessage = "Fyll i alla fält"
             return
@@ -33,16 +38,25 @@ class AuthViewModel {
             return
         }
 
-        // Block duplicate emails
-        let descriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.email == email }
+        // Block duplicate names
+        let nameDescriptor = FetchDescriptor<AppUser>(
+            predicate: #Predicate { $0.name == trimmedName }
         )
-        if (try? context.fetch(descriptor).first) != nil {
+        if (try? context.fetch(nameDescriptor).first) != nil {
+            errorMessage = "Namnet används redan"
+            return
+        }
+
+        // Block duplicate emails
+        let emailDescriptor = FetchDescriptor<AppUser>(
+            predicate: #Predicate { $0.email == normalizedEmail }
+        )
+        if (try? context.fetch(emailDescriptor).first) != nil {
             errorMessage = "E-postadressen används redan"
             return
         }
 
-        let user = AppUser(name: name, email: email, password: password)
+        let user = AppUser(name: trimmedName, email: normalizedEmail, password: password)
         context.insert(user)
         try? context.save()
         currentUser = user
@@ -53,14 +67,17 @@ class AuthViewModel {
     // MARK: - Login (existing account)
 
     func login(email: String, password: String, context: ModelContext) {
-        guard !email.trimmingCharacters(in: .whitespaces).isEmpty,
-              !password.isEmpty else {
+        let normalizedEmail = email
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        guard !normalizedEmail.isEmpty, !password.isEmpty else {
             errorMessage = "Fyll i alla fält"
             return
         }
 
         let descriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.email == email }
+            predicate: #Predicate { $0.email == normalizedEmail }
         )
         guard let user = try? context.fetch(descriptor).first else {
             errorMessage = "Inget konto med den e-postadressen"
