@@ -6,6 +6,7 @@
 //  Implemented by Ibrahim on 2026-05-18.
 //
 
+import AuthenticationServices
 import SwiftUI
 import SwiftData
 
@@ -58,6 +59,20 @@ struct RegisterView: View {
                     PrimaryButton("Registrera", systemImage: "checkmark") {
                         auth.login(name: name, email: email, context: context)
                     }
+
+                    // MARK: Sign up with Apple
+                    SignInWithAppleButton(
+                        .signUp,
+                        onRequest: { request in
+                            request.requestedScopes = [.fullName, .email]
+                        },
+                        onCompletion: { result in
+                            auth.signInWithApple(result: result, context: context)
+                        }
+                    )
+                    .signInWithAppleButtonStyle(.white)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
 
                     // MARK: Back to login
                     Button("Har du redan ett konto? Logga in") {

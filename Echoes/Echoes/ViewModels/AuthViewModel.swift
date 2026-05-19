@@ -6,6 +6,7 @@
 //  Implemented by Ibrahim on 2026-05-18.
 //
 
+import AuthenticationServices
 import SwiftData
 import SwiftUI
 
@@ -51,6 +52,47 @@ class AuthViewModel {
     func logout() {
         currentUser = nil
         isLoggedIn = false
+    }
+
+    // MARK: - Sign in with Apple
+
+    func signInWithApple(result: Result<ASAuthorization, Error>, context: ModelContext) {
+        switch result {
+        case .failure(let error):
+            errorMessage = error.localizedDescription
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                errorMessage = "Kunde inte logga in med Apple"
+                return
+            }
+
+            let appleUserID = credential.user
+
+            // Returning user – look up by Apple's stable identifier
+            let descriptor = FetchDescriptor<AppUser>(
+                predicate: #Predicate { $0.appleUserID == appleUserID }
+            )
+            if let existing = try? context.fetch(descriptor).first {
+                currentUser = existing
+                isLoggedIn = true
+                errorMessage = ""
+                return
+            }
+
+            // First-time sign-in – Apple only provides name/email this once
+            let fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
+                .compactMap { $0 }
+                .joined(separator: " ")
+            let displayName = fullName.isEmpty ? "Echoes-användare" : fullName
+            let email = credential.email ?? ""
+
+            let user = AppUser(name: displayName, email: email, appleUserID: appleUserID)
+            context.insert(user)
+            try? context.save()
+            currentUser = user
+            isLoggedIn = true
+            errorMessage = ""
+        }
     }
 
     // MARK: - Stats helpers (called after recording, playing, liking)
