@@ -17,7 +17,7 @@ struct RecordView: View {
             Text(viewModel.isRecording ? "Recording..." : "Ready to Record")
             
             Button {
-                viewmodel.toggleRecording()
+                viewModel.toggleRecording()
             } label: {
                 Text(viewModel.isRecording ?  "Stop Recording" : "Start Recording")
             }
