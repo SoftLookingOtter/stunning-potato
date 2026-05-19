@@ -31,7 +31,7 @@ struct ContentView: View {
                     Label("Rutter", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
                 }
 
-            PlaceholderView(title: "Profil", icon: "person")
+            ProfileView()
                 .tabItem {
                     Label("Profil", systemImage: "person")
                 }

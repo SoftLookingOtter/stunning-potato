@@ -14,10 +14,10 @@ class AppUser {
     var id: UUID
     var name: String
     var email: String
+    var password: String        // plain text – demo only, not for production
     var isActive: Bool
 
-    // Stable identifier returned by Sign in with Apple; nil for users who
-    // registered with name + email only.
+    // Stable identifier returned by Sign in with Apple; nil for email/password users
     var appleUserID: String?
 
     // Stats – updated locally as the user records, plays and likes echoes
@@ -25,10 +25,11 @@ class AppUser {
     var playsCount: Int
     var likesCount: Int
 
-    init(name: String, email: String, appleUserID: String? = nil) {
+    init(name: String, email: String, password: String = "", appleUserID: String? = nil) {
         self.id = UUID()
         self.name = name
         self.email = email
+        self.password = password
         self.isActive = true
         self.appleUserID = appleUserID
         self.memoriesCount = 0

@@ -14,8 +14,8 @@ struct LoginView: View {
     @Environment(\.modelContext) private var context
     @Bindable var auth: AuthViewModel
 
-    @State private var name  = ""
-    @State private var email = ""
+    @State private var email    = ""
+    @State private var password = ""
 
     var body: some View {
         NavigationStack {
@@ -44,8 +44,8 @@ struct LoginView: View {
 
                         // MARK: Fields
                         VStack(spacing: AppSpacing.md) {
-                            EchoTextField(placeholder: "Ditt namn", text: $name, icon: "person")
                             EchoTextField(placeholder: "E-postadress", text: $email, icon: "envelope")
+                            EchoSecureField(placeholder: "Lösenord", text: $password)
                         }
 
                         // MARK: Error
@@ -57,7 +57,7 @@ struct LoginView: View {
 
                         // MARK: Login button
                         PrimaryButton("Logga in", systemImage: "arrow.right") {
-                            auth.login(name: name, email: email, context: context)
+                            auth.login(email: email, password: password, context: context)
                         }
 
                         // MARK: Sign in with Apple
@@ -92,7 +92,7 @@ struct LoginView: View {
     }
 }
 
-// MARK: - Reusable text field (shared by Login + Register)
+// MARK: - Shared text field
 struct EchoTextField: View {
     let placeholder: String
     @Binding var text: String
@@ -101,14 +101,64 @@ struct EchoTextField: View {
     var body: some View {
         HStack(spacing: AppSpacing.sm) {
             Image(systemName: icon)
-                .foregroundStyle(AppColors.textMuted)
+                .foregroundStyle(AppColors.primary.opacity(0.8))
                 .frame(width: 20)
 
-            TextField(placeholder, text: $text)
+            TextField(text: $text) {
+                Text(placeholder)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .font(AppTypography.body)
+            .foregroundStyle(AppColors.textPrimary)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+        }
+        .padding(AppSpacing.md)
+        .background(AppColors.surfaceLight)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AppColors.primary.opacity(0.25), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Shared password field
+struct EchoSecureField: View {
+    let placeholder: String
+    @Binding var text: String
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Image(systemName: "lock")
+                .foregroundStyle(AppColors.primary.opacity(0.8))
+                .frame(width: 20)
+
+            if isVisible {
+                TextField(text: $text) {
+                    Text(placeholder)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.textPrimary)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+            } else {
+                SecureField(text: $text) {
+                    Text(placeholder)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .font(AppTypography.body)
+                .foregroundStyle(AppColors.textPrimary)
+            }
+
+            Button {
+                isVisible.toggle()
+            } label: {
+                Image(systemName: isVisible ? "eye.slash" : "eye")
+                    .foregroundStyle(AppColors.textMuted)
+            }
         }
         .padding(AppSpacing.md)
         .background(AppColors.surface)

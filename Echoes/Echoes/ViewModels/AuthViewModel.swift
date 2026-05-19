@@ -19,35 +19,64 @@ class AuthViewModel {
     var isLoggedIn: Bool = false
     var errorMessage: String = ""
 
-    // MARK: - Login / Register (same logic locally)
+    // MARK: - Register (new account)
 
-    func login(name: String, email: String, context: ModelContext) {
+    func register(name: String, email: String, password: String, context: ModelContext) {
         guard !name.trimmingCharacters(in: .whitespaces).isEmpty,
-              !email.trimmingCharacters(in: .whitespaces).isEmpty else {
+              !email.trimmingCharacters(in: .whitespaces).isEmpty,
+              !password.isEmpty else {
             errorMessage = "Fyll i alla fält"
             return
         }
-
-        // Check if a user with this email already exists
-        let descriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.email == email }
-        )
-        if let existing = try? context.fetch(descriptor).first {
-            // Found – log them in
-            currentUser = existing
-            isLoggedIn = true
-            errorMessage = ""
+        guard password.count >= 6 else {
+            errorMessage = "Lösenordet måste vara minst 6 tecken"
             return
         }
 
-        // New user – create and save
-        let user = AppUser(name: name, email: email)
+        // Block duplicate emails
+        let descriptor = FetchDescriptor<AppUser>(
+            predicate: #Predicate { $0.email == email }
+        )
+        if (try? context.fetch(descriptor).first) != nil {
+            errorMessage = "E-postadressen används redan"
+            return
+        }
+
+        let user = AppUser(name: name, email: email, password: password)
         context.insert(user)
         try? context.save()
         currentUser = user
         isLoggedIn = true
         errorMessage = ""
     }
+
+    // MARK: - Login (existing account)
+
+    func login(email: String, password: String, context: ModelContext) {
+        guard !email.trimmingCharacters(in: .whitespaces).isEmpty,
+              !password.isEmpty else {
+            errorMessage = "Fyll i alla fält"
+            return
+        }
+
+        let descriptor = FetchDescriptor<AppUser>(
+            predicate: #Predicate { $0.email == email }
+        )
+        guard let user = try? context.fetch(descriptor).first else {
+            errorMessage = "Inget konto med den e-postadressen"
+            return
+        }
+        guard user.password == password else {
+            errorMessage = "Fel lösenord"
+            return
+        }
+
+        currentUser = user
+        isLoggedIn = true
+        errorMessage = ""
+    }
+
+    // MARK: - Logout
 
     func logout() {
         currentUser = nil
@@ -68,7 +97,7 @@ class AuthViewModel {
 
             let appleUserID = credential.user
 
-            // Returning user – look up by Apple's stable identifier
+            // Returning Apple user – look up by stable Apple ID
             let descriptor = FetchDescriptor<AppUser>(
                 predicate: #Predicate { $0.appleUserID == appleUserID }
             )
@@ -79,7 +108,7 @@ class AuthViewModel {
                 return
             }
 
-            // First-time sign-in – Apple only provides name/email this once
+            // First sign-in – Apple only provides name/email once
             let fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
                 .compactMap { $0 }
                 .joined(separator: " ")
@@ -95,7 +124,7 @@ class AuthViewModel {
         }
     }
 
-    // MARK: - Stats helpers (called after recording, playing, liking)
+    // MARK: - Stats helpers
 
     func incrementMemories(context: ModelContext) {
         currentUser?.memoriesCount += 1

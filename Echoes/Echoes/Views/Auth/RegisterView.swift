@@ -15,8 +15,10 @@ struct RegisterView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var auth: AuthViewModel
 
-    @State private var name  = ""
-    @State private var email = ""
+    @State private var name            = ""
+    @State private var email           = ""
+    @State private var password        = ""
+    @State private var confirmPassword = ""
 
     var body: some View {
         ZStack {
@@ -46,6 +48,15 @@ struct RegisterView: View {
                     VStack(spacing: AppSpacing.md) {
                         EchoTextField(placeholder: "Ditt namn", text: $name, icon: "person")
                         EchoTextField(placeholder: "E-postadress", text: $email, icon: "envelope")
+                        EchoSecureField(placeholder: "Lösenord (minst 6 tecken)", text: $password)
+                        EchoSecureField(placeholder: "Bekräfta lösenord", text: $confirmPassword)
+                    }
+
+                    // MARK: Password mismatch warning
+                    if !confirmPassword.isEmpty && password != confirmPassword {
+                        Text("Lösenorden matchar inte")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.accentRose)
                     }
 
                     // MARK: Error
@@ -57,7 +68,11 @@ struct RegisterView: View {
 
                     // MARK: Register button
                     PrimaryButton("Registrera", systemImage: "checkmark") {
-                        auth.login(name: name, email: email, context: context)
+                        guard password == confirmPassword else {
+                            auth.errorMessage = "Lösenorden matchar inte"
+                            return
+                        }
+                        auth.register(name: name, email: email, password: password, context: context)
                     }
 
                     // MARK: Sign up with Apple
