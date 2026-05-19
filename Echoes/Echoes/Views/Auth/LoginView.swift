@@ -52,7 +52,7 @@ struct LoginView: View {
                         if !auth.errorMessage.isEmpty {
                             Text(auth.errorMessage)
                                 .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.accentRose)
+                                .foregroundStyle(AppColors.people)
                         }
 
                         // MARK: Login button

@@ -56,14 +56,14 @@ struct RegisterView: View {
                     if !confirmPassword.isEmpty && password != confirmPassword {
                         Text("Lösenorden matchar inte")
                             .font(AppTypography.caption)
-                            .foregroundStyle(AppColors.accentRose)
+                            .foregroundStyle(AppColors.people)
                     }
 
                     // MARK: Error
                     if !auth.errorMessage.isEmpty {
                         Text(auth.errorMessage)
                             .font(AppTypography.caption)
-                            .foregroundStyle(AppColors.accentRose)
+                            .foregroundStyle(AppColors.people)
                     }
 
                     // MARK: Register button

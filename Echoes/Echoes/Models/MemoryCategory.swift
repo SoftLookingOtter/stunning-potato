@@ -18,10 +18,10 @@ enum MemoryCategory: String, Codable, CaseIterable {
 
     var color: Color {
         switch self {
-        case .nostalgic:  return AppColors.primary
-        case .historical: return AppColors.accentBlue
-        case .family:     return AppColors.accentGreen
-        case .mysterious: return AppColors.accentPurple
+        case .nostalgic:  return AppColors.nostalgia
+        case .historical: return AppColors.history
+        case .family:     return AppColors.nature
+        case .mysterious: return AppColors.mystery
         }
     }
 
