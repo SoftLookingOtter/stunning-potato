@@ -13,7 +13,7 @@ import SwiftData
 @main
 struct EchoesApp: App {
 
-    // Ibrahim: AuthViewModel lives here so it survives navigation
+    
     @State private var auth = AuthViewModel()
 
     var body: some Scene {
@@ -25,10 +25,10 @@ struct EchoesApp: App {
                 LoginView(auth: auth)
             }
         }
-        // Ibrahim: registers all SwiftData models and seeds demo data on first launch
         .modelContainer(for: [EchoMemory.self, AppUser.self, Route.self]) { result in
             if case .success(let container) = result {
                 SeedDataService.seedIfNeeded(context: container.mainContext)
+                auth.restoreSession(context: container.mainContext)
             }
         }
     }
