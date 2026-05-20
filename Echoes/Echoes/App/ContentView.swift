@@ -21,7 +21,7 @@ struct ContentView: View {
                     Label("Utforska", systemImage: "map")
                 }
 
-            PlaceholderView(title: "Spela in", icon: "mic.fill")
+            RecordView()
                 .tabItem {
                     Label("Spela in", systemImage: "mic.fill")
                 }
