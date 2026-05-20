@@ -102,6 +102,7 @@ struct RegisterView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear { auth.errorMessage = "" }
     }
 }
 
