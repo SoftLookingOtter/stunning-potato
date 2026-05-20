@@ -12,15 +12,43 @@ struct RecordView: View {
     @State private var viewModel = RecordViewModel()
     
     var body: some View {
-        VStack(spacing: 20) {
+        
+        ZStack {
+            AppColors.background
+                .ignoresSafeArea()
             
-            Text(viewModel.isRecording ? "Recording..." : "Ready to Record")
-            
-            Button {
-                viewModel.toggleRecording()
-            } label: {
-                Text(viewModel.isRecording ?  "Stop Recording" : "Start Recording")
+            VStack(spacing: AppSpacing.lg) {
+
+                Text(viewModel.isRecording ? "Spelar in..." : "Börja spela in")
+                    .font(AppTypography.title)
+                    .foregroundStyle(AppColors.textPrimary)
+                
+                Button {
+                    viewModel.toggleRecording()
+                } label: {
+                    
+                    HStack(spacing: AppSpacing.sm) {
+                        Image(systemName: viewModel.isRecording ? "stop.circle.fill" : "mic.fill")
+                        Text(viewModel.isRecording ? "Stoppa inspelning" : "Börja spela in")
+                            .font(AppTypography.headline)
+                    }
+                    .foregroundStyle(AppColors.background)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        viewModel.isRecording
+                        ? AppColors.people
+                        : AppColors.primary
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .glow(
+                        viewModel.isRecording
+                        ? AppColors.people
+                        : AppColors.primary
+                    )
+                }
             }
+            .padding(.horizontal, AppSpacing.lg)
         }
     }
 }
