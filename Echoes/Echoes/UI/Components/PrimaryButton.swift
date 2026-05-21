@@ -38,7 +38,6 @@ struct PrimaryButton: View {
             .padding(.vertical, 14)
             .background(AppColors.primary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .glow(AppColors.primary)
         }
     }
 }

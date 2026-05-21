@@ -10,6 +10,7 @@ import SwiftUI
 struct RecordView: View {
     
     @State private var viewModel = RecordViewModel()
+    @State private var selectedCategory: MemoryCategory = .nostalgic
     
     var body: some View {
         
@@ -22,6 +23,8 @@ struct RecordView: View {
                 Text(viewModel.isRecording ? "Spelar in..." : "Börja spela in")
                     .font(AppTypography.title)
                     .foregroundStyle(AppColors.textPrimary)
+                
+                ThemePicker(selectedCategory: $selectedCategory)
                 
                 Button {
                     viewModel.toggleRecording()
