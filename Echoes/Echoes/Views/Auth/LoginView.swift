@@ -88,6 +88,7 @@ struct LoginView: View {
                     .padding(.horizontal, AppSpacing.lg)
                 }
             }
+            .onAppear { auth.errorMessage = "" }
         }
     }
 }
