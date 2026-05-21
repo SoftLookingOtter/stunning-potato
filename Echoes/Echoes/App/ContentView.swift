@@ -4,6 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Updated by Sara Lindén on 2026-05-18.
+//  Updated by Sara Lindén on 2026-05-21.
 //
 
 import SwiftUI
