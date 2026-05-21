@@ -15,8 +15,10 @@ struct ContentView: View {
                 .tabItem {
                     Label("Hem", systemImage: "house.fill")
                 }
+            
+            //map (explore/utförska)
 
-            PlaceholderView(title: "Utforska", icon: "map")
+            MapView()
                 .tabItem {
                     Label("Utforska", systemImage: "map")
                 }
