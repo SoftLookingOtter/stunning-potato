@@ -1,0 +1,40 @@
+/* 
+  Localizable.strings
+  Echoes
+
+  Created by Sara Lindén on 2026-05-22.
+  
+*/
+
+// Onboarding
+
+"back_button" = "Tillbaka";
+"continue_button" = "Fortsätt";
+"get_started_button" = "Kom igång";
+
+"onboarding_welcome_title" = "Välkommen till Echoes";
+"onboarding_welcome_text" = "Skapa ljudminnen kopplade till platser och upptäck echoes omkring dig.";
+
+"category_selection_title" = "Välj vad du gillar";
+"category_selection_text" = "Det här hjälper appen att anpassa vilka typer av echoes som känns mest relevanta för dig.";
+
+"category_nostalgia" = "Nostalgi";
+"category_history" = "Historia";
+"category_events" = "Händelser";
+"category_calm" = "Lugn";
+"category_mystery" = "Mystik";
+
+"permissions_title" = "Behörigheter";
+"permissions_text" = "För att Echoes ska fungera behöver appen kunna använda plats, mikrofon, kamera och bildbibliotek.";
+
+"permission_location_title" = "Plats";
+"permission_location_text" = "För att visa echoes nära dig.";
+
+"permission_microphone_title" = "Mikrofon";
+"permission_microphone_text" = "För att spela in ljudminnen.";
+
+"permission_camera_title" = "Kamera";
+"permission_camera_text" = "För att lägga till bilder.";
+
+"permission_photos_title" = "Bildbibliotek";
+"permission_photos_text" = "För att välja bilder från mobilen.";
