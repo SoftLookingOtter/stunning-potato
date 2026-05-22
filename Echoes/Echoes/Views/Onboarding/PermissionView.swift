@@ -50,12 +50,22 @@ struct PermissionView: View {
                     title: "permission_photos_title",
                     text: "permission_photos_text"
                 )
+
+                permissionRow(
+                    icon: "bell.fill",
+                    title: "permission_notifications_title",
+                    text: "permission_notifications_text"
+                )
             }
             .padding(.horizontal, AppSpacing.lg)
         }
     }
 
-    private func permissionRow(icon: String, title: LocalizedStringKey, text: LocalizedStringKey) -> some View {
+    private func permissionRow(
+        icon: String,
+        title: LocalizedStringKey,
+        text: LocalizedStringKey
+    ) -> some View {
         HStack(spacing: AppSpacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 22, weight: .semibold))

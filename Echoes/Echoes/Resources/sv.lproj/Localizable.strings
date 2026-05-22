@@ -15,8 +15,8 @@
 "onboarding_welcome_title" = "Välkommen till Echoes";
 "onboarding_welcome_text" = "Skapa ljudminnen kopplade till platser och upptäck echoes omkring dig.";
 
-"category_selection_title" = "Välj vad du gillar";
-"category_selection_text" = "Det här hjälper appen att anpassa vilka typer av echoes som känns mest relevanta för dig.";
+"category_selection_title" = "Välj det du gillar";
+"category_selection_text" = "Välj en eller flera kategorier som du vill upptäcka echoes inom.";
 
 "category_nostalgia" = "Nostalgi";
 "category_history" = "Historia";
@@ -25,7 +25,16 @@
 "category_mystery" = "Mystik";
 
 "permissions_title" = "Behörigheter";
-"permissions_text" = "För att Echoes ska fungera behöver appen kunna använda plats, mikrofon, kamera och bildbibliotek.";
+"permissions_text" = "I nästa steg kommer appen behöva be om vissa behörigheter för att funktionerna ska fungera.";
+
+"permissions_allow_button" = "Ge behörigheter";
+"permissions_requesting_button" = "Öppnar behörigheter...";
+
+"permission_notifications_title" = "Notiser";
+"permission_notifications_text" = "För att kunna meddela dig när ett echo finns nära dig.";
+
+"category_selection_title" = "Välj det du gillar";
+"category_selection_text" = "Välj en eller flera kategorier som du vill upptäcka echoes inom.";
 
 "permission_location_title" = "Plats";
 "permission_location_text" = "För att visa echoes nära dig.";

@@ -9,8 +9,16 @@ import SwiftUI
 
 struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @State private var selectedCategory: String?
+    @AppStorage("selectedCategories") private var selectedCategoriesStorage = ""
+
+    @State private var selectedCategories: Set<String> = []
     @State private var currentStep = 0
+    @State private var isRequestingPermissions = false
+
+    private let locationService = LocationService()
+    private let audioService = AudioService()
+    private let photoStorageService = PhotoStorageService()
+    private let notificationService = NotificationService()
 
     private let categories = [
         "category_nostalgia",
@@ -35,7 +43,7 @@ struct OnboardingView: View {
                 } else if currentStep == 1 {
                     CategorySelectionView(
                         categories: categories,
-                        selectedCategory: $selectedCategory
+                        selectedCategories: $selectedCategories
                     )
                 } else {
                     PermissionView()
@@ -46,6 +54,8 @@ struct OnboardingView: View {
                 PrimaryButton(buttonTitle) {
                     handleNextStep()
                 }
+                .disabled(isRequestingPermissions)
+                .opacity(isRequestingPermissions ? 0.6 : 1)
                 .padding(.horizontal, AppSpacing.lg)
                 .padding(.bottom, AppSpacing.lg)
             }
@@ -93,17 +103,46 @@ struct OnboardingView: View {
     }
 
     private var buttonTitle: String {
-        currentStep == 2
-        ? String(localized: "get_started_button")
-        : String(localized: "continue_button")
+        if isRequestingPermissions {
+            return String(localized: "permissions_requesting_button")
+        }
+
+        if currentStep == 2 {
+            return String(localized: "permissions_allow_button")
+        }
+
+        return String(localized: "continue_button")
     }
 
     private func handleNextStep() {
         if currentStep < 2 {
             currentStep += 1
         } else {
-            hasCompletedOnboarding = true
+            requestPermissionsAndFinish()
         }
+    }
+
+    private func requestPermissionsAndFinish() {
+        isRequestingPermissions = true
+        saveSelectedCategories()
+
+        Task {
+            locationService.requestLocationPermission()
+
+            _ = await audioService.requestMicrophonePermission()
+            _ = await photoStorageService.requestCameraPermission()
+            _ = await photoStorageService.requestPhotoLibraryPermission()
+            _ = await notificationService.requestNotificationPermission()
+
+            await MainActor.run {
+                isRequestingPermissions = false
+                hasCompletedOnboarding = true
+            }
+        }
+    }
+
+    private func saveSelectedCategories() {
+        selectedCategoriesStorage = selectedCategories.joined(separator: ",")
     }
 }
 

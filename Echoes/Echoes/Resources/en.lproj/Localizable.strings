@@ -16,7 +16,7 @@
 "onboarding_welcome_text" = "Create audio memories connected to places and discover echoes around you.";
 
 "category_selection_title" = "Choose what you like";
-"category_selection_text" = "This helps the app personalize which types of echoes feel most relevant to you.";
+"category_selection_text" = "Select one or more categories you want to discover echoes within.";
 
 "category_nostalgia" = "Nostalgia";
 "category_history" = "History";
@@ -25,7 +25,16 @@
 "category_mystery" = "Mystery";
 
 "permissions_title" = "Permissions";
-"permissions_text" = "To make Echoes work, the app needs access to location, microphone, camera, and photo library.";
+"permissions_text" = "In the next step, the app will need to ask for certain permissions so the features can work.";
+
+"permissions_allow_button" = "Allow permissions";
+"permissions_requesting_button" = "Requesting permissions...";
+
+"permission_notifications_title" = "Notifications";
+"permission_notifications_text" = "To let you know when an echo is nearby.";
+
+"category_selection_title" = "Choose what you like";
+"category_selection_text" = "Select one or more categories you want to discover echoes within.";
 
 "permission_location_title" = "Location";
 "permission_location_text" = "To show echoes near you.";

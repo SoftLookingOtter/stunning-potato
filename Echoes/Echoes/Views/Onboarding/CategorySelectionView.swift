@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CategorySelectionView: View {
     let categories: [String]
-    @Binding var selectedCategory: String?
+    @Binding var selectedCategories: Set<String>
 
     var body: some View {
         VStack(spacing: AppSpacing.lg) {
@@ -34,28 +34,43 @@ struct CategorySelectionView: View {
             ) {
                 ForEach(categories, id: \.self) { category in
                     Button {
-                        selectedCategory = category
+                        toggleCategory(category)
                     } label: {
-                        Text(LocalizedStringKey(category))
-                            .font(AppTypography.body)
-                            .fontWeight(.medium)
-                            .foregroundStyle(
-                                selectedCategory == category
-                                ? AppColors.background
-                                : AppColors.textPrimary
-                            )
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, AppSpacing.sm)
-                            .background(
-                                selectedCategory == category
-                                ? AppColors.primary
-                                : AppColors.surface
-                            )
-                            .clipShape(Capsule())
+                        HStack(spacing: AppSpacing.sm) {
+                            Text(LocalizedStringKey(category))
+                                .font(AppTypography.body)
+                                .fontWeight(.medium)
+
+                            if selectedCategories.contains(category) {
+                                Image(systemName: "checkmark")
+                                    .font(.caption.weight(.bold))
+                            }
+                        }
+                        .foregroundStyle(
+                            selectedCategories.contains(category)
+                            ? AppColors.background
+                            : AppColors.textPrimary
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.sm)
+                        .background(
+                            selectedCategories.contains(category)
+                            ? AppColors.primary
+                            : AppColors.surface
+                        )
+                        .clipShape(Capsule())
                     }
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
+        }
+    }
+
+    private func toggleCategory(_ category: String) {
+        if selectedCategories.contains(category) {
+            selectedCategories.remove(category)
+        } else {
+            selectedCategories.insert(category)
         }
     }
 }
@@ -67,6 +82,6 @@ struct CategorySelectionView: View {
             "category_history",
             "category_events"
         ],
-        selectedCategory: .constant("category_nostalgia")
+        selectedCategories: .constant(["category_nostalgia"])
     )
 }
