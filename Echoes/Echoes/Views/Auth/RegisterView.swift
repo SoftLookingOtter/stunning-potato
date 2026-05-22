@@ -46,7 +46,7 @@ struct RegisterView: View {
 
                     // MARK: Fields
                     VStack(spacing: AppSpacing.md) {
-                        EchoTextField(placeholder: "Ditt namn", text: $name, icon: "person")
+                        EchoTextField(placeholder: "Användarnamn", text: $name, icon: "person")
                         EchoTextField(placeholder: "E-postadress", text: $email, icon: "envelope")
                         EchoSecureField(placeholder: "Lösenord (minst 6 tecken)", text: $password)
                         EchoSecureField(placeholder: "Bekräfta lösenord", text: $confirmPassword)
