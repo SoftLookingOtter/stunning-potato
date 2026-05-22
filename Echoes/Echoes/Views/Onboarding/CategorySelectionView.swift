@@ -36,30 +36,15 @@ struct CategorySelectionView: View {
                     Button {
                         toggleCategory(category)
                     } label: {
-                        HStack(spacing: AppSpacing.sm) {
-                            Text(LocalizedStringKey(category))
-                                .font(AppTypography.body)
-                                .fontWeight(.medium)
-
-                            if selectedCategories.contains(category) {
-                                Image(systemName: "checkmark")
-                                    .font(.caption.weight(.bold))
-                            }
-                        }
-                        .foregroundStyle(
-                            selectedCategories.contains(category)
-                            ? AppColors.background
-                            : AppColors.textPrimary
+                        CategoryChip(
+                            titleKey: LocalizedStringKey(category),
+                            systemImage: icon(for: category),
+                            color: color(for: category),
+                            isSelected: selectedCategories.contains(category)
                         )
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, AppSpacing.sm)
-                        .background(
-                            selectedCategories.contains(category)
-                            ? AppColors.primary
-                            : AppColors.surface
-                        )
-                        .clipShape(Capsule())
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
@@ -73,6 +58,40 @@ struct CategorySelectionView: View {
             selectedCategories.insert(category)
         }
     }
+
+    private func icon(for category: String) -> String {
+        switch category {
+        case "category_nostalgia":
+            return "clock.arrow.circlepath"
+        case "category_history":
+            return "book.closed.fill"
+        case "category_events":
+            return "sparkles"
+        case "category_calm":
+            return "moon.fill"
+        case "category_mystery":
+            return "eye.fill"
+        default:
+            return "circle.fill"
+        }
+    }
+
+    private func color(for category: String) -> Color {
+        switch category {
+        case "category_nostalgia":
+            return AppColors.nostalgia
+        case "category_history":
+            return AppColors.history
+        case "category_events":
+            return AppColors.echo
+        case "category_calm":
+            return AppColors.nature
+        case "category_mystery":
+            return AppColors.mystery
+        default:
+            return AppColors.primary
+        }
+    }
 }
 
 #Preview {
@@ -80,8 +99,10 @@ struct CategorySelectionView: View {
         categories: [
             "category_nostalgia",
             "category_history",
-            "category_events"
+            "category_events",
+            "category_calm",
+            "category_mystery"
         ],
-        selectedCategories: .constant(["category_nostalgia"])
+        selectedCategories: .constant(["category_nostalgia", "category_mystery"])
     )
 }
