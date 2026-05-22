@@ -4,7 +4,6 @@
 //
 //  
 //  Implemented by Ibrahim on 2026-05-18.
-//  Updated by Sara Lindén on 2026-05-22.
 
 import SwiftData
 import Foundation
