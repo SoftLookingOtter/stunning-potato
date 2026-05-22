@@ -3,18 +3,17 @@
 //  Echoes
 //
 //  Created by Sara Lindén on 2026-05-17.
+//  Updated by Robin Eliasson on 2026-05-21
 //
-//  Updated by Robin Eliasson on 2026-05-18
-
 
 import SwiftUI
 import MapKit
 
 struct MapView: View {
-    // Vi skapar och äger vår ViewModel här
+    //  ViewModel
     @StateObject private var viewModel = MapViewModel()
     
-    // Startposition över Linköping (Används innan GPS:en hittat oss)
+    // Startposition  Linköping 
     @State private var cameraPosition: MapCameraPosition = .camera(
         MapCamera(
             centerCoordinate: CLLocationCoordinate2D(latitude: 58.4108, longitude: 15.6214),
@@ -23,10 +22,10 @@ struct MapView: View {
     )
     
     var body: some View {
-        ZStack(alignment: .top) {
-            // 1. Kartan hämtar nu sina 'hiddenMemories' direkt från viewModel
+        ZStack(alignment: .bottom) { 
+            // 1. map gets their 'hiddenMemories' from  viewModel.swift
             Map(position: $cameraPosition, interactionModes: .pan) {
-                UserAnnotation() // Visar den blå pricken automatiskt via CoreLocation
+                UserAnnotation() // blue dot via CoreLocation
                 
                 ForEach(viewModel.hiddenMemories) { memory in
                     Annotation("", coordinate: memory.coordinate) {
@@ -41,45 +40,16 @@ struct MapView: View {
                 MapUserLocationButton()
             }
             
-            VStack {
-                // 2. Sökfältet (Hämtar sin text från viewModel)
-                searchBar
-                
-                Spacer()
-                
-                // 3. Proximity Banner
-                proximityBanner
-            }
+            // 2. Proximity Banner shows when there is memories nearby
+            proximityBanner
         }
-        // Denna körs så fort kart-skärmen visas på telefonen.
-        // Den sätter igång GPS-förfrågan och spårningen.
+        //ask for location permission and setup map when view appears
         .onAppear {
             viewModel.setupMap()
         }
     }
     
-    // MARK: - UI Components
-    
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(AppColors.textMuted)
-            
-            // Vi länkar textfältet till viewModel istället
-            TextField("Sök plats...", text: $viewModel.searchText)
-                .font(AppTypography.body)
-                .foregroundColor(AppColors.textPrimary)
-        }
-        .padding(AppSpacing.md)
-        .background(AppColors.surface)
-        .cornerRadius(100)
-        .overlay(
-            RoundedRectangle(cornerRadius: 100)
-                .stroke(AppColors.border, lineWidth: 1)
-        )
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, AppSpacing.sm)
-    }
+    //  - UI Components
     
     private var proximityBanner: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -107,12 +77,11 @@ struct MapView: View {
                 .stroke(AppColors.border, lineWidth: 1)
         )
         .padding(.horizontal, AppSpacing.md)
-        .padding(.bottom, 100)
+        .padding(.bottom, 100) // Lämnar plats för tab-bar
     }
 }
 
 // MARK: - Subviews
-// (Din snygga GhostPinView ligger kvar här nere)
 struct GhostPinView: View {
     var body: some View {
         ZStack {

@@ -19,8 +19,7 @@ struct EchoPin: Identifiable {
 class MapViewModel: ObservableObject {
     @Published var locationService = LocationService()
     
-    @Published var searchText: String = ""
-    
+
     @Published var hiddenMemories: [EchoPin] = [
         EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4118, longitude: 15.6224)),
         EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4098, longitude: 15.6184)),

@@ -10,13 +10,13 @@ import Foundation
 import CoreLocation
 import Combine
 
-// NSObject behövs för att kunna samarbeta med Apples äldre CLLocationManager
+// NSObject needs for  Apples older CLLocationManager
 class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
     
-    // Den inbyggda managern som sköter GPS-hårdvaran
+    // GPS manager
     private let locationManager = CLLocationManager()
     
-    // Denna variabel publicerar användarens nuvarande position så att vår ViewModel kan se den
+    // shows the users position so we can use it in our MapView
     @Published var userLocation: CLLocation?
     
     override init() {
@@ -25,21 +25,21 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest // Högsta möjliga precision
     }
     
-    // Funktion för att trigga rutan: "Vill du tillåta att appen använder din plats?"
+    // is there permission to use location services? If not, ask for it
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
     }
     
-    // Funktion för att starta GPS-spårningen
+    // start tracking the users location
     func startTracking() {
         locationManager.startUpdatingLocation()
     }
     
-    // DELEGATE-METOD: Denna körs automatiskt varje gång telefonen känner att man flyttat på sig
+    // automatically called when the location manager gets a new location update
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latestLocation = locations.last else { return }
         
-        // Uppdaterar vår publicerade variabel på huvudtråden (UI-tråden)
+        // updates the userLocation on the main thread since it's a @Published property that the UI listens to
         DispatchQueue.main.async {
             self.userLocation = latestLocation
         }
