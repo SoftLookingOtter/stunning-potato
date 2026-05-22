@@ -1,3 +1,11 @@
+//
+//  ContentView.swift
+//  Echoes
+//
+//  Updated by Sara Lindén on 2026-05-22.
+//
+//
+
 import SwiftUI
 
 struct ContentView: View {
