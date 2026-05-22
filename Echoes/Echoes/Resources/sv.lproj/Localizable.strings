@@ -1,20 +1,14 @@
-/* 
-  Localizable.strings
-  Echoes
-
-  Created by Sara Lindén on 2026-05-22.
-  
-*/
-
-// Onboarding
-
+/* OnboardingView.swift */
 "back_button" = "Tillbaka";
 "continue_button" = "Fortsätt";
 "get_started_button" = "Kom igång";
+"permissions_allow_button" = "Ge behörigheter";
+"permissions_requesting_button" = "Öppnar behörigheter...";
 
 "onboarding_welcome_title" = "Välkommen till Echoes";
 "onboarding_welcome_text" = "Skapa ljudminnen kopplade till platser och upptäck echoes omkring dig.";
 
+/* CategorySelectionView.swift */
 "category_selection_title" = "Välj det du gillar";
 "category_selection_text" = "Välj en eller flera kategorier som du vill upptäcka echoes inom.";
 
@@ -24,17 +18,9 @@
 "category_calm" = "Lugn";
 "category_mystery" = "Mystik";
 
+/* PermissionView.swift */
 "permissions_title" = "Behörigheter";
-"permissions_text" = "I nästa steg kommer appen behöva be om vissa behörigheter för att funktionerna ska fungera.";
-
-"permissions_allow_button" = "Ge behörigheter";
-"permissions_requesting_button" = "Öppnar behörigheter...";
-
-"permission_notifications_title" = "Notiser";
-"permission_notifications_text" = "För att kunna meddela dig när ett echo finns nära dig.";
-
-"category_selection_title" = "Välj det du gillar";
-"category_selection_text" = "Välj en eller flera kategorier som du vill upptäcka echoes inom.";
+"permissions_text" = "För att Echoes ska fungera behöver appen kunna använda plats, mikrofon, kamera, bildbibliotek och notiser.";
 
 "permission_location_title" = "Plats";
 "permission_location_text" = "För att visa echoes nära dig.";
@@ -47,3 +33,13 @@
 
 "permission_photos_title" = "Bildbibliotek";
 "permission_photos_text" = "För att välja bilder från mobilen.";
+
+"permission_notifications_title" = "Notiser";
+"permission_notifications_text" = "För att kunna meddela dig när ett echo finns nära dig.";
+
+/* ContentView.swift */
+"tab_home" = "Hem";
+"tab_map" = "Utforska";
+"tab_record" = "Spela in";
+"tab_routes" = "Rutter";
+"tab_profile" = "Profil";

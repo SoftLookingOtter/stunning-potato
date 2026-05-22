@@ -4,7 +4,6 @@
 //
 //  Updated by Sara Lindén on 2026-05-22.
 //
-//
 
 import SwiftUI
 
@@ -16,27 +15,27 @@ struct ContentView: View {
             TabView {
                 HomeView()
                     .tabItem {
-                        Label("Hem", systemImage: "house.fill")
+                        Label("tab_home", systemImage: "house.fill")
                     }
 
                 MapView()
                     .tabItem {
-                        Label("Utforska", systemImage: "map")
+                        Label("tab_map", systemImage: "map")
                     }
 
                 RecordView()
                     .tabItem {
-                        Label("Spela in", systemImage: "mic.fill")
+                        Label("tab_record", systemImage: "mic.fill")
                     }
 
                 RouteListView()
                     .tabItem {
-                        Label("Rutter", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                        Label("tab_routes", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
                     }
 
                 ProfileView()
                     .tabItem {
-                        Label("Profil", systemImage: "person")
+                        Label("tab_profile", systemImage: "person")
                     }
             }
             .tint(AppColors.primary)

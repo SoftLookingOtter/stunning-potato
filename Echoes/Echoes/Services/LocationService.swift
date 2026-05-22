@@ -16,6 +16,8 @@ final class LocationService: NSObject, ObservableObject {
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
     @Published private(set) var currentLocation: CLLocation?
 
+    private var permissionContinuation: CheckedContinuation<Bool, Never>?
+
     override init() {
         self.authorizationStatus = locationManager.authorizationStatus
         super.init()
@@ -24,8 +26,25 @@ final class LocationService: NSObject, ObservableObject {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
 
-    func requestLocationPermission() {
-        locationManager.requestWhenInUseAuthorization()
+    func requestLocationPermission() async -> Bool {
+        let currentStatus = locationManager.authorizationStatus
+
+        switch currentStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            return true
+
+        case .denied, .restricted:
+            return false
+
+        case .notDetermined:
+            return await withCheckedContinuation { continuation in
+                permissionContinuation = continuation
+                locationManager.requestWhenInUseAuthorization()
+            }
+
+        @unknown default:
+            return false
+        }
     }
 
     func startUpdatingLocation() {
@@ -42,9 +61,16 @@ extension LocationService: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
 
-        if authorizationStatus == .authorizedWhenInUse ||
-            authorizationStatus == .authorizedAlways {
+        let isAuthorized = authorizationStatus == .authorizedWhenInUse ||
+            authorizationStatus == .authorizedAlways
+
+        if isAuthorized {
             startUpdatingLocation()
+        }
+
+        if authorizationStatus != .notDetermined {
+            permissionContinuation?.resume(returning: isAuthorized)
+            permissionContinuation = nil
         }
     }
 

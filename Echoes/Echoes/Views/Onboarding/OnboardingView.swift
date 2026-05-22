@@ -127,8 +127,7 @@ struct OnboardingView: View {
         saveSelectedCategories()
 
         Task {
-            locationService.requestLocationPermission()
-
+            _ = await locationService.requestLocationPermission()
             _ = await audioService.requestMicrophonePermission()
             _ = await photoStorageService.requestCameraPermission()
             _ = await photoStorageService.requestPhotoLibraryPermission()
