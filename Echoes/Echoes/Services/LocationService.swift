@@ -4,17 +4,18 @@
 //
 //  Updated by Sara Lindén on 2026-05-22.
 //
+//  Updated by Robin Eliasson 2026-05-20
 
 import Foundation
 import CoreLocation
 import Combine
 
-final class LocationService: NSObject, ObservableObject {
+final class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let locationManager = CLLocationManager()
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
-    @Published private(set) var currentLocation: CLLocation?
+    @Published var userLocation: CLLocation?
 
     private var permissionContinuation: CheckedContinuation<Bool, Never>?
 
@@ -47,16 +48,25 @@ final class LocationService: NSObject, ObservableObject {
         }
     }
 
-    func startUpdatingLocation() {
+    func requestLocationPermission() {
+        locationManager.requestWhenInUseAuthorization()
+    }
+
+    func startTracking() {
         locationManager.startUpdatingLocation()
     }
 
-    func stopUpdatingLocation() {
+    func stopTracking() {
         locationManager.stopUpdatingLocation()
     }
-}
 
-extension LocationService: CLLocationManagerDelegate {
+    func startUpdatingLocation() {
+        startTracking()
+    }
+
+    func stopUpdatingLocation() {
+        stopTracking()
+    }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
@@ -65,7 +75,7 @@ extension LocationService: CLLocationManagerDelegate {
             authorizationStatus == .authorizedAlways
 
         if isAuthorized {
-            startUpdatingLocation()
+            startTracking()
         }
 
         if authorizationStatus != .notDetermined {
@@ -78,7 +88,11 @@ extension LocationService: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
-        currentLocation = locations.last
+        guard let latestLocation = locations.last else { return }
+
+        DispatchQueue.main.async {
+            self.userLocation = latestLocation
+        }
     }
 
     func locationManager(
