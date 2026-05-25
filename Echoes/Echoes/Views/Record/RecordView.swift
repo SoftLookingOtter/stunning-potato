@@ -24,31 +24,11 @@ struct RecordView: View {
                     .font(AppTypography.title)
                     .foregroundStyle(AppColors.textPrimary)
                 
-                ThemePicker(selectedCategory: $selectedCategory)
+                ThemePicker(selectedCategory: $selectedCategory,
+                            isRecording: viewModel.isRecording)
                 
-                Button {
+                RecordButton(isRecording: viewModel.isRecording) {
                     viewModel.toggleRecording()
-                } label: {
-                    
-                    HStack(spacing: AppSpacing.sm) {
-                        Image(systemName: viewModel.isRecording ? "stop.circle.fill" : "mic.fill")
-                        Text(viewModel.isRecording ? "Stoppa inspelning" : "Börja spela in")
-                            .font(AppTypography.headline)
-                    }
-                    .foregroundStyle(AppColors.background)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        viewModel.isRecording
-                        ? AppColors.people
-                        : AppColors.primary
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .glow(
-                        viewModel.isRecording
-                        ? AppColors.people
-                        : AppColors.primary
-                    )
                 }
             }
             .padding(.horizontal, AppSpacing.lg)

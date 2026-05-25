@@ -10,27 +10,29 @@ import SwiftUI
 struct ThemePicker: View {
     
     @Binding var selectedCategory: MemoryCategory
+    let isRecording: Bool
+    
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
     
     var body: some View {
-        
-        ScrollView(.horizontal, showsIndicators: false) {
-            
-            HStack(spacing: AppSpacing.md) {
-                
+        LazyVGrid(columns: columns, spacing: AppSpacing.sm) {
                 ForEach(MemoryCategory.allCases, id: \.self) { category in
                 
                     Button {
                         selectedCategory = category
                     } label: {
-                        
-                        HStack(spacing: AppSpacing.sm) {
-                            
+                        VStack(spacing: AppSpacing.sm) {
                             Image(systemName: category.icon)
                             
                             Text(category.displayName)
                                 .font(AppTypography.caption)
                         }
+                        
                         .foregroundStyle(AppColors.textPrimary)
+                        .frame(maxWidth: .infinity)
                         .padding(.horizontal, AppSpacing.md)
                         .padding(.vertical, AppSpacing.sm)
                         .background(
@@ -38,12 +40,17 @@ struct ThemePicker: View {
                             ? category.color
                             : AppColors.surface
                         )
-                        .clipShape(Capsule())
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
+            .disabled(isRecording)
+            .opacity(isRecording ? 0.4 : 1.0)
         }
     }
-}
 
+
+#Preview {
+    ThemePicker(selectedCategory: .constant(.nostalgic), isRecording: false)
+}
