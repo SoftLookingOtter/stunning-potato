@@ -46,11 +46,15 @@ struct RegisterView: View {
 
                     // MARK: Fields
                     VStack(spacing: AppSpacing.md) {
-                        EchoTextField(placeholder: "Användarnamn", text: $name, icon: "person")
+                        EchoTextField(placeholder: "Ditt namn", text: $name, icon: "person")
                         EchoTextField(placeholder: "E-postadress", text: $email, icon: "envelope")
                         EchoSecureField(placeholder: "Lösenord (minst 6 tecken)", text: $password)
                         EchoSecureField(placeholder: "Bekräfta lösenord", text: $confirmPassword)
                     }
+                    .onChange(of: name)            { auth.errorMessage = "" }
+                    .onChange(of: email)           { auth.errorMessage = "" }
+                    .onChange(of: password)        { auth.errorMessage = "" }
+                    .onChange(of: confirmPassword) { auth.errorMessage = "" }
 
                     // MARK: Password mismatch warning
                     if !confirmPassword.isEmpty && password != confirmPassword {
@@ -72,17 +76,17 @@ struct RegisterView: View {
                             auth.errorMessage = "Lösenorden matchar inte"
                             return
                         }
-                        auth.register(name: name, email: email, password: password, context: context)
+                        Task { await auth.register(name: name, email: email, password: password, context: context) }
                     }
 
                     // MARK: Sign up with Apple
                     SignInWithAppleButton(
                         .signUp,
                         onRequest: { request in
-                            request.requestedScopes = [.fullName, .email]
+                            auth.makeAppleRequest(request)
                         },
                         onCompletion: { result in
-                            auth.signInWithApple(result: result, context: context)
+                            Task { await auth.signInWithApple(result: result, context: context) }
                         }
                     )
                     .signInWithAppleButtonStyle(.white)
