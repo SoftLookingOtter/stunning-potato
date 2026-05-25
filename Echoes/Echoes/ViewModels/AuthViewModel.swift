@@ -4,14 +4,17 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-05-18.
+//  Migrated to Firebase Auth on 2026-05-25.
 //
 
 import AuthenticationServices
+import CryptoKit
+import FirebaseAuth
 import SwiftData
 import SwiftUI
 
-/// Handles mock local auth – no Firebase required.
-/// One AppUser is stored in SwiftData and treated as the active session.
+/// Auth is delegated to Firebase. SwiftData keeps a local mirror of profile/stats
+/// keyed by `firebaseUID`, so the rest of the app can keep working with AppUser.
 @Observable
 class AuthViewModel {
 
@@ -19,39 +22,21 @@ class AuthViewModel {
     var isLoggedIn: Bool = false
     var errorMessage: String = ""
 
-    // MARK: - Session persistence
+    // Held between Apple onRequest and onCompletion so Firebase can verify the token.
+    private var currentNonce: String?
 
-    private let sessionKey = "loggedInUserID"
+    // MARK: - Session restore
 
-    private func saveSession(_ user: AppUser) {
-        UserDefaults.standard.set(user.id.uuidString, forKey: sessionKey)
-    }
-
-    private func clearSession() {
-        UserDefaults.standard.removeObject(forKey: sessionKey)
-    }
-
-    /// Called once at app start to rehydrate the session from UserDefaults.
+    /// Firebase persists the session in Keychain on its own, so we just check
+    /// whether there is a current user at launch and rehydrate the local mirror.
     func restoreSession(context: ModelContext) {
-        guard
-            let idString = UserDefaults.standard.string(forKey: sessionKey),
-            let id = UUID(uuidString: idString)
-        else { return }
-
-        let descriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.id == id }
-        )
-        if let user = try? context.fetch(descriptor).first {
-            currentUser = user
-            isLoggedIn = true
-        } else {
-            clearSession()
-        }
+        guard let firebaseUser = Auth.auth().currentUser else { return }
+        attachLocalMirror(for: firebaseUser, fallbackName: nil, context: context)
     }
 
-    // MARK: - Register (new account)
+    // MARK: - Register (email + password)
 
-    func register(name: String, email: String, password: String, context: ModelContext) {
+    func register(name: String, email: String, password: String, context: ModelContext) async {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedEmail = email
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -68,36 +53,25 @@ class AuthViewModel {
             return
         }
 
-        // Block duplicate names
-        let nameDescriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.name == trimmedName }
-        )
-        if (try? context.fetch(nameDescriptor).first) != nil {
-            errorMessage = "Namnet används redan"
-            return
-        }
+        do {
+            let result = try await Auth.auth().createUser(
+                withEmail: normalizedEmail,
+                password: password
+            )
+            let change = result.user.createProfileChangeRequest()
+            change.displayName = trimmedName
+            try? await change.commitChanges()
 
-        // Block duplicate emails
-        let emailDescriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.email == normalizedEmail }
-        )
-        if (try? context.fetch(emailDescriptor).first) != nil {
-            errorMessage = "E-postadressen används redan"
-            return
+            attachLocalMirror(for: result.user, fallbackName: trimmedName, context: context)
+            errorMessage = ""
+        } catch {
+            errorMessage = error.localizedDescription
         }
-
-        let user = AppUser(name: trimmedName, email: normalizedEmail, password: password)
-        context.insert(user)
-        try? context.save()
-        saveSession(user)
-        currentUser = user
-        isLoggedIn = true
-        errorMessage = ""
     }
 
-    // MARK: - Login (existing account)
+    // MARK: - Login (email + password)
 
-    func login(email: String, password: String, context: ModelContext) {
+    func login(email: String, password: String, context: ModelContext) async {
         let normalizedEmail = email
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
@@ -107,35 +81,37 @@ class AuthViewModel {
             return
         }
 
-        let descriptor = FetchDescriptor<AppUser>(
-            predicate: #Predicate { $0.email == normalizedEmail }
-        )
-        guard let user = try? context.fetch(descriptor).first else {
-            errorMessage = "Inget konto med den e-postadressen"
-            return
+        do {
+            let result = try await Auth.auth().signIn(
+                withEmail: normalizedEmail,
+                password: password
+            )
+            attachLocalMirror(for: result.user, fallbackName: nil, context: context)
+            errorMessage = ""
+        } catch {
+            errorMessage = error.localizedDescription
         }
-        guard user.password == password else {
-            errorMessage = "Fel lösenord"
-            return
-        }
-
-        saveSession(user)
-        currentUser = user
-        isLoggedIn = true
-        errorMessage = ""
     }
 
     // MARK: - Logout
 
     func logout() {
-        clearSession()
+        try? Auth.auth().signOut()
         currentUser = nil
         isLoggedIn = false
     }
 
-    // MARK: - Sign in with Apple
+    // MARK: - Sign in with Apple → Firebase
 
-    func signInWithApple(result: Result<ASAuthorization, Error>, context: ModelContext) {
+    /// Call this from `SignInWithAppleButton.onRequest` to set the nonce and scopes.
+    func makeAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
+        let nonce = randomNonce()
+        currentNonce = nonce
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = sha256(nonce)
+    }
+
+    func signInWithApple(result: Result<ASAuthorization, Error>, context: ModelContext) async {
         switch result {
         case .failure(let error):
             errorMessage = error.localizedDescription
@@ -144,35 +120,40 @@ class AuthViewModel {
                 errorMessage = "Kunde inte logga in med Apple"
                 return
             }
-
-            let appleUserID = credential.user
-
-            // Returning Apple user – look up by stable Apple ID
-            let descriptor = FetchDescriptor<AppUser>(
-                predicate: #Predicate { $0.appleUserID == appleUserID }
-            )
-            if let existing = try? context.fetch(descriptor).first {
-                saveSession(existing)
-                currentUser = existing
-                isLoggedIn = true
-                errorMessage = ""
+            guard let nonce = currentNonce else {
+                errorMessage = "Saknar nonce"
+                return
+            }
+            guard let tokenData = credential.identityToken,
+                  let tokenString = String(data: tokenData, encoding: .utf8) else {
+                errorMessage = "Kunde inte läsa Apple-token"
                 return
             }
 
-            // First sign-in – Apple only provides name/email once
-            let fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
-                .compactMap { $0 }
-                .joined(separator: " ")
-            let displayName = fullName.isEmpty ? "Echoes-användare" : fullName
-            let email = credential.email ?? ""
+            let firebaseCredential = OAuthProvider.appleCredential(
+                withIDToken: tokenString,
+                rawNonce: nonce,
+                fullName: credential.fullName
+            )
 
-            let user = AppUser(name: displayName, email: email, appleUserID: appleUserID)
-            context.insert(user)
-            try? context.save()
-            saveSession(user)
-            currentUser = user
-            isLoggedIn = true
-            errorMessage = ""
+            do {
+                let result = try await Auth.auth().signIn(with: firebaseCredential)
+
+                let fallbackName = [credential.fullName?.givenName,
+                                    credential.fullName?.familyName]
+                    .compactMap { $0 }
+                    .joined(separator: " ")
+
+                attachLocalMirror(
+                    for: result.user,
+                    fallbackName: fallbackName.isEmpty ? nil : fallbackName,
+                    appleUserID: credential.user,
+                    context: context
+                )
+                errorMessage = ""
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -191,5 +172,55 @@ class AuthViewModel {
     func incrementLikes(context: ModelContext) {
         currentUser?.likesCount += 1
         try? context.save()
+    }
+
+    // MARK: - Local mirror
+
+    /// Finds or creates the SwiftData AppUser for a Firebase user, then sets
+    /// `currentUser` and flips `isLoggedIn` so the root view switches scenes.
+    private func attachLocalMirror(
+        for firebaseUser: FirebaseAuth.User,
+        fallbackName: String?,
+        appleUserID: String? = nil,
+        context: ModelContext
+    ) {
+        let uid = firebaseUser.uid
+        let descriptor = FetchDescriptor<AppUser>(
+            predicate: #Predicate { $0.firebaseUID == uid }
+        )
+
+        let user: AppUser
+        if let existing = try? context.fetch(descriptor).first {
+            user = existing
+        } else {
+            let displayName = fallbackName
+                ?? firebaseUser.displayName
+                ?? "Echoes-användare"
+            user = AppUser(
+                name: displayName,
+                email: firebaseUser.email ?? "",
+                appleUserID: appleUserID,
+                firebaseUID: uid
+            )
+            context.insert(user)
+            try? context.save()
+        }
+        currentUser = user
+        isLoggedIn = true
+    }
+
+    // MARK: - Apple nonce helpers
+
+    private func randomNonce(length: Int = 32) -> String {
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
+        var bytes = [UInt8](repeating: 0, count: length)
+        _ = SecRandomCopyBytes(kSecRandomDefault, length, &bytes)
+        return String(bytes.map { charset[Int($0) % charset.count] })
+    }
+
+    private func sha256(_ input: String) -> String {
+        SHA256.hash(data: Data(input.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 }

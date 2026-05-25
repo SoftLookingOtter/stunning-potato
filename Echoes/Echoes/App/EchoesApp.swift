@@ -9,12 +9,18 @@
 
 import SwiftUI
 import SwiftData
+import FirebaseCore
+
 
 @main
 struct EchoesApp: App {
 
     
     @State private var auth = AuthViewModel()
+    
+    init () {
+        FirebaseApp.configure()
+    }
 
     var body: some Scene {
         WindowGroup {

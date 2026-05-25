@@ -47,6 +47,8 @@ struct LoginView: View {
                             EchoTextField(placeholder: "E-postadress", text: $email, icon: "envelope")
                             EchoSecureField(placeholder: "Lösenord", text: $password)
                         }
+                        .onChange(of: email)    { auth.errorMessage = "" }
+                        .onChange(of: password) { auth.errorMessage = "" }
 
                         // MARK: Error
                         if !auth.errorMessage.isEmpty {
@@ -57,17 +59,17 @@ struct LoginView: View {
 
                         // MARK: Login button
                         PrimaryButton("Logga in", systemImage: "arrow.right") {
-                            auth.login(email: email, password: password, context: context)
+                            Task { await auth.login(email: email, password: password, context: context) }
                         }
 
                         // MARK: Sign in with Apple
                         SignInWithAppleButton(
                             .signIn,
                             onRequest: { request in
-                                request.requestedScopes = [.fullName, .email]
+                                auth.makeAppleRequest(request)
                             },
                             onCompletion: { result in
-                                auth.signInWithApple(result: result, context: context)
+                                Task { await auth.signInWithApple(result: result, context: context) }
                             }
                         )
                         .signInWithAppleButtonStyle(.white)
