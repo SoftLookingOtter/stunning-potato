@@ -33,12 +33,11 @@ struct PrimaryButton: View {
                 Text(title)
                     .font(AppTypography.headline)
             }
-            .foregroundStyle(AppColors.textPrimary)
+            .foregroundStyle(AppColors.background)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(AppColors.primary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .glow(AppColors.primary)
         }
     }
 }
