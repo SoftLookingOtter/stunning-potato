@@ -4,7 +4,7 @@
 //
 //  Updated by Sara Lindén on 2026-05-22.
 //
-//  Updated by Robin Eliasson 2026-05-20
+//  Updated by Robin Eliasson 2026-05-23
 
 import Foundation
 import CoreLocation
@@ -16,8 +16,10 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
     @Published var userLocation: CLLocation?
+    @Published var activeRegionID: UUID?
 
     private var permissionContinuation: CheckedContinuation<Bool, Never>?
+    private let maxMonitoredRegions = 20
 
     override init() {
         self.authorizationStatus = locationManager.authorizationStatus
@@ -100,5 +102,47 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
         didFailWithError error: Error
     ) {
         print("Location error: \(error.localizedDescription)")
+    }
+
+    func startMonitoringRegions(for pins: [EchoPin]) {
+        guard CLLocationManager.isMonitoringAvailable(for: CLCircularRegion.self) else { return }
+
+        // Stop existing monitoring to ensure we only track the current set of regions
+        locationManager.monitoredRegions.forEach { locationManager.stopMonitoring(for: $0) }
+
+        let sortedPins: [EchoPin]
+        if let userLocation = userLocation {
+            sortedPins = pins.sorted { first, second in
+                let firstLocation = CLLocation(latitude: first.coordinate.latitude, longitude: first.coordinate.longitude)
+                let secondLocation = CLLocation(latitude: second.coordinate.latitude, longitude: second.coordinate.longitude)
+                return userLocation.distance(from: firstLocation) < userLocation.distance(from: secondLocation)
+            }
+        } else {
+            sortedPins = pins
+        }
+
+        let regionsToMonitor = Array(sortedPins.prefix(maxMonitoredRegions))
+        for pin in regionsToMonitor {
+            let region = CLCircularRegion(center: pin.coordinate, radius: 200, identifier: pin.id.uuidString)
+            region.notifyOnEntry = true
+            region.notifyOnExit = true
+            locationManager.startMonitoring(for: region)
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        guard let regionID = UUID(uuidString: region.identifier) else { return }
+        DispatchQueue.main.async {
+            self.activeRegionID = regionID
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
+        guard let regionID = UUID(uuidString: region.identifier) else { return }
+        DispatchQueue.main.async {
+            if self.activeRegionID == regionID {
+                self.activeRegionID = nil
+            }
+        }
     }
 }
