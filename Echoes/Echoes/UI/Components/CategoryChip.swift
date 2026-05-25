@@ -3,13 +3,13 @@
 //  Echoes
 //
 //  Created by Sara Lindén on 2026-05-17.
-//  Updated by Sara Lindén on 2026-05-18.
+//  Updated by Sara Lindén on 2026-05-22.
 //
 
 import SwiftUI
 
 struct CategoryChip: View {
-    let title: String
+    let titleKey: LocalizedStringKey
     let systemImage: String
     let color: Color
     var isSelected: Bool = false
@@ -19,8 +19,13 @@ struct CategoryChip: View {
             Image(systemName: systemImage)
                 .font(.caption)
 
-            Text(title)
+            Text(titleKey)
                 .font(AppTypography.caption)
+
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.caption.weight(.bold))
+            }
         }
         .foregroundStyle(isSelected ? AppColors.background : color)
         .padding(.horizontal, 12)
