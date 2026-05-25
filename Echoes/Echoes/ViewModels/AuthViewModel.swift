@@ -19,6 +19,36 @@ class AuthViewModel {
     var isLoggedIn: Bool = false
     var errorMessage: String = ""
 
+    // MARK: - Session persistence
+
+    private let sessionKey = "loggedInUserID"
+
+    private func saveSession(_ user: AppUser) {
+        UserDefaults.standard.set(user.id.uuidString, forKey: sessionKey)
+    }
+
+    private func clearSession() {
+        UserDefaults.standard.removeObject(forKey: sessionKey)
+    }
+
+    /// Called once at app start to rehydrate the session from UserDefaults.
+    func restoreSession(context: ModelContext) {
+        guard
+            let idString = UserDefaults.standard.string(forKey: sessionKey),
+            let id = UUID(uuidString: idString)
+        else { return }
+
+        let descriptor = FetchDescriptor<AppUser>(
+            predicate: #Predicate { $0.id == id }
+        )
+        if let user = try? context.fetch(descriptor).first {
+            currentUser = user
+            isLoggedIn = true
+        } else {
+            clearSession()
+        }
+    }
+
     // MARK: - Register (new account)
 
     func register(name: String, email: String, password: String, context: ModelContext) {
@@ -59,6 +89,7 @@ class AuthViewModel {
         let user = AppUser(name: trimmedName, email: normalizedEmail, password: password)
         context.insert(user)
         try? context.save()
+        saveSession(user)
         currentUser = user
         isLoggedIn = true
         errorMessage = ""
@@ -88,6 +119,7 @@ class AuthViewModel {
             return
         }
 
+        saveSession(user)
         currentUser = user
         isLoggedIn = true
         errorMessage = ""
@@ -96,6 +128,7 @@ class AuthViewModel {
     // MARK: - Logout
 
     func logout() {
+        clearSession()
         currentUser = nil
         isLoggedIn = false
     }
@@ -119,6 +152,7 @@ class AuthViewModel {
                 predicate: #Predicate { $0.appleUserID == appleUserID }
             )
             if let existing = try? context.fetch(descriptor).first {
+                saveSession(existing)
                 currentUser = existing
                 isLoggedIn = true
                 errorMessage = ""
@@ -135,6 +169,7 @@ class AuthViewModel {
             let user = AppUser(name: displayName, email: email, appleUserID: appleUserID)
             context.insert(user)
             try? context.save()
+            saveSession(user)
             currentUser = user
             isLoggedIn = true
             errorMessage = ""
