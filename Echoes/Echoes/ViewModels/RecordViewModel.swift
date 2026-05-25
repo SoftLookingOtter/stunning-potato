@@ -13,7 +13,9 @@ import Observation
 final class RecordViewModel {
     
     private let audioService = AudioService()
+    
     var isRecording = false
+    var recordedAudioURL: URL?
     
     func toggleRecording() {
         
@@ -34,6 +36,8 @@ final class RecordViewModel {
     private func stopRecording() {
         
         audioService.stopRecording()
+        
+        recordedAudioURL = audioService.getRecordedAudioURL()
         isRecording = false
     }
 }

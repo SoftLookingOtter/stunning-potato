@@ -108,4 +108,10 @@ final class AudioService {
 
         print("Playback stopped")
     }
+    
+    func getRecordedAudioURL() -> URL? {
+        recordedAudioURL
+    }
+    
+    
 }
