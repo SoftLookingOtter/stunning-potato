@@ -15,9 +15,10 @@ import FirebaseCore
 @main
 struct EchoesApp: App {
 
-    
+
     @State private var auth = AuthViewModel()
-    
+    @State private var audioService = AudioService()
+
     init () {
         FirebaseApp.configure()
     }
@@ -27,8 +28,10 @@ struct EchoesApp: App {
             if auth.isLoggedIn {
                 ContentView()
                     .environment(auth)
+                    .environment(audioService)
             } else {
                 LoginView(auth: auth)
+                    .environment(audioService)
             }
         }
         .modelContainer(for: [EchoMemory.self, AppUser.self, Route.self]) { result in

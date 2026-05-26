@@ -6,16 +6,23 @@
 //  Updated by Mikael Engvall on 2026-05-18
 
 import AVFoundation
+import Observation
 
 
+@Observable
 final class AudioService {
- 
-    private var audioRecorder: AVAudioRecorder?
-    private var audioPlayer: AVAudioPlayer?
+
+    @ObservationIgnored private var audioRecorder: AVAudioRecorder?
+    @ObservationIgnored private var audioPlayer: AVAudioPlayer?
     private(set) var recordedAudioURL: URL?
-    
+
     init() {
         setupSession()
+    }
+
+    /// Returns the URL of the most recent recording, if any.
+    func getRecordedAudioURL() -> URL? {
+        recordedAudioURL
     }
     
     func setupSession() {

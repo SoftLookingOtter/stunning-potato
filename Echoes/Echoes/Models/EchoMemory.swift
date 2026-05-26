@@ -50,4 +50,26 @@ class EchoMemory {
         self.likes = 0
         self.plays = 0
     }
+
+    /// Convenience for creating an EchoMemory from a finished audio recording.
+    /// Stores the file's local path on disk so playback can resolve it later.
+    convenience init(
+        recordingAt url: URL,
+        title: String,
+        story: String,
+        date: Date = Date(),
+        category: MemoryCategory,
+        latitude: Double,
+        longitude: Double
+    ) {
+        self.init(
+            title: title,
+            story: story,
+            date: date,
+            category: category,
+            latitude: latitude,
+            longitude: longitude
+        )
+        self.audioFilePath = url.path
+    }
 }
