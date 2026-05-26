@@ -4,7 +4,7 @@
 //
 //  Updated by Sara Lindén on 2026-05-22.
 //
-//  Updated by Robin Eliasson 2026-05-23
+//  Updated by Robin Eliasson 2026-05-25
 
 import Foundation
 import CoreLocation
