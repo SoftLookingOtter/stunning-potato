@@ -2,7 +2,6 @@
 //  PrimaryButton.swift
 //  Echoes
 //
-//  Created by Sara Lindén on 2026-05-17.
 //  Updated by Sara Lindén on 2026-05-18.
 //
 
@@ -38,6 +37,7 @@ struct PrimaryButton: View {
             .padding(.vertical, 14)
             .background(AppColors.primary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .glow(AppColors.primary)
         }
     }
 }
