@@ -13,6 +13,7 @@ import SwiftData
 final class RecordViewModel {
 
     private let audioService = AudioService()
+    
     var isRecording = false
     var recordedAudioURL: URL?
 

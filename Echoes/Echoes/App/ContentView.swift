@@ -2,42 +2,46 @@
 //  ContentView.swift
 //  Echoes
 //
-//  Created by Sara Lindén on 2026-05-17.
-//  Updated by Sara Lindén on 2026-05-18.
-//  Updated by Sara Lindén on 2026-05-21.
+//  Updated by Sara Lindén on 2026-05-22.
 //
 
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+
     var body: some View {
-        TabView {
-            HomeView()
-                .tabItem {
-                    Label("Hem", systemImage: "house.fill")
-                }
+        if hasCompletedOnboarding {
+            TabView {
+                HomeView()
+                    .tabItem {
+                        Label("tab_home", systemImage: "house.fill")
+                    }
 
-            MapView()
-                .tabItem {
-                    Label("Utforska", systemImage: "map")
-                }
+                MapView()
+                    .tabItem {
+                        Label("tab_map", systemImage: "map")
+                    }
 
-            RecordView()
-                .tabItem {
-                    Label("Spela in", systemImage: "mic.fill")
-                }
+                RecordView()
+                    .tabItem {
+                        Label("tab_record", systemImage: "mic.fill")
+                    }
 
-            RouteListView()
-                .tabItem {
-                    Label("Rutter", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
-                }
+                RouteListView()
+                    .tabItem {
+                        Label("tab_routes", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                    }
 
-            ProfileView()
-                .tabItem {
-                    Label("Profil", systemImage: "person")
-                }
+                ProfileView()
+                    .tabItem {
+                        Label("tab_profile", systemImage: "person")
+                    }
+            }
+            .tint(AppColors.primary)
+        } else {
+            OnboardingView()
         }
-        .tint(AppColors.primary)
     }
 }
 

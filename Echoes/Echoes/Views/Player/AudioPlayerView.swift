@@ -3,104 +3,112 @@
 //  Echoes
 //
 //  Created by Sara Lindén on 2026-05-17.
-//
+//  Updated by Mikael Engvall on 2026-05-25
 
 import SwiftUI
 
 struct AudioPlayerView: View {
-
-    let audioURL: URL
-
-    @Environment(AudioService.self) private var audioService
+    
     @State private var isPlaying = false
-
+    @State private var currentTime = "00:00"
+    
+    private let audioService = AudioService()
+    
     var body: some View {
-        HStack(spacing: AppSpacing.md) {
-            ZStack {
-                if isPlaying {
-                    ForEach(0..<3, id: \.self) { index in
-                        PlayWaveRing(delay: Double(index) * 0.5)
-                    }
-                }
-
+        
+        ZStack {
+            AppColors.background
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                
                 Button {
-                    togglePlayback()
+                    isPlaying.toggle()
                 } label: {
                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 48))
+                        .font(.system(size: 60))
                         .foregroundStyle(AppColors.primary)
                         .glow(AppColors.primary)
                 }
-            }
-            .frame(width: 72, height: 72)
-
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text(isPlaying ? "Spelar upp..." : "Tryck för att lyssna")
-                    .font(AppTypography.body)
+                
+                Text(currentTime)
+                    .font(AppTypography.title)
                     .foregroundStyle(AppColors.textPrimary)
-
-                Text(audioURL.lastPathComponent)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textMuted)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                
+                WaveformView(isPlaying: isPlaying)
             }
-
-            Spacer()
+            .padding(.horizontal, AppSpacing.lg)
         }
-        .padding(AppSpacing.md)
-        .background(AppColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(AppColors.border, lineWidth: 1)
-        )
-        .onDisappear {
-            if isPlaying {
-                audioService.stopPlayback()
-                isPlaying = false
-            }
-        }
-    }
-
-    private func togglePlayback() {
-        if isPlaying {
-            audioService.stopPlayback()
-            isPlaying = false
-        } else {
-            audioService.playRecording(url: audioURL)
-            isPlaying = true
-        }
-    }
-}
-
-/// Single expanding ring used behind the play button while audio is playing.
-/// Mounted only when needed; each instance staggers its start via `delay`.
-private struct PlayWaveRing: View {
-    let delay: Double
-    @State private var animate = false
-
-    var body: some View {
-        Circle()
-            .stroke(AppColors.primary, lineWidth: 2)
-            .frame(width: 48, height: 48)
-            .scaleEffect(animate ? 1.8 : 0.9)
-            .opacity(animate ? 0 : 0.6)
-            .onAppear {
-                withAnimation(
-                    .easeOut(duration: 1.5)
-                        .repeatForever(autoreverses: false)
-                        .delay(delay)
-                ) {
-                    animate = true
-                }
-            }
     }
 }
 
 #Preview {
-    AudioPlayerView(audioURL: URL(fileURLWithPath: "/tmp/sample.m4a"))
-        .environment(AudioService())
-        .padding()
-        .background(AppColors.background)
+    AudioPlayerView()
 }
+
+struct WaveformView: View {
+    
+    let isPlaying: Bool
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: 6) {
+            
+            RoundedRectangle(cornerRadius: 4)
+                .frame(width: 6,
+                       height: isPlaying ? 40 : 20
+                )
+                
+                .animation(
+                    .easeInOut(duration: 0.4),
+                    value: isPlaying
+                )
+            
+            RoundedRectangle(cornerRadius: 4)
+
+                .frame(
+                    width: 6,
+                    height: isPlaying ? 25 : 40
+                )
+                .animation(
+                    .easeInOut(duration: 0.4),
+                    value: isPlaying
+                )
+            
+            RoundedRectangle(cornerRadius: 4)
+
+                .frame(
+                    width: 6,
+                    height: isPlaying ? 50 : 30
+                )
+                .animation(
+                    .easeInOut(duration: 0.4),
+                    value: isPlaying
+                )
+            
+            RoundedRectangle(cornerRadius: 4)
+
+                .frame(
+                    width: 6,
+                    height: isPlaying ? 20 : 50
+                )
+                .animation(
+                    .easeInOut(duration: 0.4),
+                    value: isPlaying
+                )
+            
+            RoundedRectangle(cornerRadius: 4)
+
+                .frame(
+                    width: 6,
+                    height: isPlaying ? 45 : 25
+                )
+                .animation(
+                    .easeInOut(duration: 0.4),
+                    value: isPlaying
+                )
+        }
+        .foregroundStyle(AppColors.primary)
+        .glow(AppColors.primary)
+    }
+}
+
