@@ -7,11 +7,13 @@
 //  Updated by Sara Lindén on 2026-05-22.
 
 import AVFoundation
+import Observation
 
+@Observable
 final class AudioService {
 
-    private var audioRecorder: AVAudioRecorder?
-    private var audioPlayer: AVAudioPlayer?
+    @ObservationIgnored private var audioRecorder: AVAudioRecorder?
+    @ObservationIgnored private var audioPlayer: AVAudioPlayer?
     private(set) var recordedAudioURL: URL?
 
     init() {
