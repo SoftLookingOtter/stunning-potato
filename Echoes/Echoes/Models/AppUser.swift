@@ -28,6 +28,11 @@ class AppUser {
     var playsCount: Int
     var likesCount: Int
 
+    // Local profile data
+    var joinDate: Date
+    var bio: String
+    var avatarImageName: String?
+
     init(name: String,
          email: String,
          password: String = "",
@@ -43,5 +48,8 @@ class AppUser {
         self.memoriesCount = 0
         self.playsCount = 0
         self.likesCount = 0
+        self.joinDate = Date()
+        self.bio = ""
+        self.avatarImageName = nil
     }
 }
