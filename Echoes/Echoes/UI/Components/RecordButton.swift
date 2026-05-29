@@ -15,7 +15,7 @@ struct RecordButton: View {
         Button(action:action) {
             HStack(spacing: AppSpacing.sm) {
                 
-                Image(systemName: isRecording ? "stop-circle.fill" : "mic.fill")
+                Image(systemName: isRecording ? "stop.circle.fill" : "mic.fill")
                 
                 Text(isRecording ? "Stoppa inspelning" : "Börja spela in")
                     .font(AppTypography.headline)
