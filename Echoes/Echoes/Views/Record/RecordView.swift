@@ -49,14 +49,17 @@ struct RecordView: View {
                     
                     print("Spara-knapen trycktes")
                     
-                    if let echo = viewModel.saveEcho(
+                    if viewModel.saveEcho(
                         in: context,
                         title: title,
                         story: story,
                         category: selectedCategory,
                         latitude: 0,
                         longitude: 0
-                    ) {
+                    ) != nil {
+                        
+                        print("Echo Sparad")
+                        
                     } else {
                         print("Ingen echo sparades")
                     }
