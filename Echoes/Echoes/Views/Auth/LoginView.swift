@@ -6,7 +6,6 @@
 //  Implemented by Ibrahim on 2026-05-18.
 //
 
-import AuthenticationServices
 import SwiftUI
 import SwiftData
 
@@ -61,20 +60,6 @@ struct LoginView: View {
                         PrimaryButton("Logga in", systemImage: "arrow.right") {
                             Task { await auth.login(email: email, password: password, context: context) }
                         }
-
-                        // MARK: Sign in with Apple
-                        SignInWithAppleButton(
-                            .signIn,
-                            onRequest: { request in
-                                auth.makeAppleRequest(request)
-                            },
-                            onCompletion: { result in
-                                Task { await auth.signInWithApple(result: result, context: context) }
-                            }
-                        )
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
 
                         // MARK: Register link
                         NavigationLink {

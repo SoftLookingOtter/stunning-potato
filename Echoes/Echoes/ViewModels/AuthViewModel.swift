@@ -7,8 +7,6 @@
 //  Migrated to Firebase Auth on 2026-05-25.
 //
 
-import AuthenticationServices
-import CryptoKit
 import FirebaseAuth
 import SwiftData
 import SwiftUI
@@ -21,9 +19,6 @@ class AuthViewModel {
     var currentUser: AppUser?
     var isLoggedIn: Bool = false
     var errorMessage: String = ""
-
-    // Held between Apple onRequest and onCompletion so Firebase can verify the token.
-    private var currentNonce: String?
 
     // MARK: - Session restore
 
@@ -101,62 +96,6 @@ class AuthViewModel {
         isLoggedIn = false
     }
 
-    // MARK: - Sign in with Apple → Firebase
-
-    /// Call this from `SignInWithAppleButton.onRequest` to set the nonce and scopes.
-    func makeAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
-        let nonce = randomNonce()
-        currentNonce = nonce
-        request.requestedScopes = [.fullName, .email]
-        request.nonce = sha256(nonce)
-    }
-
-    func signInWithApple(result: Result<ASAuthorization, Error>, context: ModelContext) async {
-        switch result {
-        case .failure(let error):
-            errorMessage = error.localizedDescription
-        case .success(let authorization):
-            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-                errorMessage = "Kunde inte logga in med Apple"
-                return
-            }
-            guard let nonce = currentNonce else {
-                errorMessage = "Saknar nonce"
-                return
-            }
-            guard let tokenData = credential.identityToken,
-                  let tokenString = String(data: tokenData, encoding: .utf8) else {
-                errorMessage = "Kunde inte läsa Apple-token"
-                return
-            }
-
-            let firebaseCredential = OAuthProvider.appleCredential(
-                withIDToken: tokenString,
-                rawNonce: nonce,
-                fullName: credential.fullName
-            )
-
-            do {
-                let result = try await Auth.auth().signIn(with: firebaseCredential)
-
-                let fallbackName = [credential.fullName?.givenName,
-                                    credential.fullName?.familyName]
-                    .compactMap { $0 }
-                    .joined(separator: " ")
-
-                attachLocalMirror(
-                    for: result.user,
-                    fallbackName: fallbackName.isEmpty ? nil : fallbackName,
-                    appleUserID: credential.user,
-                    context: context
-                )
-                errorMessage = ""
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
     // MARK: - Stats helpers
 
     func incrementMemories(context: ModelContext) {
@@ -181,7 +120,6 @@ class AuthViewModel {
     private func attachLocalMirror(
         for firebaseUser: FirebaseAuth.User,
         fallbackName: String?,
-        appleUserID: String? = nil,
         context: ModelContext
     ) {
         let uid = firebaseUser.uid
@@ -199,7 +137,6 @@ class AuthViewModel {
             user = AppUser(
                 name: displayName,
                 email: firebaseUser.email ?? "",
-                appleUserID: appleUserID,
                 firebaseUID: uid
             )
             context.insert(user)
@@ -207,20 +144,5 @@ class AuthViewModel {
         }
         currentUser = user
         isLoggedIn = true
-    }
-
-    // MARK: - Apple nonce helpers
-
-    private func randomNonce(length: Int = 32) -> String {
-        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
-        var bytes = [UInt8](repeating: 0, count: length)
-        _ = SecRandomCopyBytes(kSecRandomDefault, length, &bytes)
-        return String(bytes.map { charset[Int($0) % charset.count] })
-    }
-
-    private func sha256(_ input: String) -> String {
-        SHA256.hash(data: Data(input.utf8))
-            .map { String(format: "%02x", $0) }
-            .joined()
     }
 }

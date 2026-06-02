@@ -15,13 +15,21 @@ final class HomeViewModel {
 
     // MARK: - Filter state
 
-    /// When nil, all categories are shown.
-    var selectedCategory: MemoryCategory? = nil
+    /// Persisted to UserDefaults so the chosen category survives app restarts.
+    var selectedCategory: MemoryCategory? {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: "selectedCategory") else { return nil }
+            return MemoryCategory(rawValue: raw)
+        }
+        set {
+            UserDefaults.standard.set(newValue?.rawValue, forKey: "selectedCategory")
+        }
+    }
     var searchText: String = ""
 
     // MARK: - SwiftData: hämta alla echoes
     //
-    // Views use @Query to get the live array, then pass it here.
+    // Views use @Query to get the live array.
     // This keeps the ViewModel testable without a live ModelContext.
 
     static func allEchoesDescriptor() -> FetchDescriptor<EchoMemory> {
@@ -82,13 +90,15 @@ final class HomeViewModel {
 
     // MARK: - SwiftData: uppdatera likes/plays lokalt
 
-    func like(_ echo: EchoMemory, in context: ModelContext) {
+    func like(_ echo: EchoMemory, auth: AuthViewModel, in context: ModelContext) {
         echo.likes += 1
+        auth.incrementLikes(context: context)
         try? context.save()
     }
 
-    func play(_ echo: EchoMemory, in context: ModelContext) {
+    func play(_ echo: EchoMemory, auth: AuthViewModel, in context: ModelContext) {
         echo.plays += 1
+        auth.incrementPlays(context: context)
         try? context.save()
     }
 }

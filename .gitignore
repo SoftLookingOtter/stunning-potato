@@ -61,3 +61,6 @@ GoogleService-Info.plist
 
 # Simulator logs and caches
 coreSimulator/
+
+# Claude Code
+.claude/
