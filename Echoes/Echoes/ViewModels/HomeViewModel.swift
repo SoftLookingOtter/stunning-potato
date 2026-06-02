@@ -29,7 +29,7 @@ final class HomeViewModel {
 
     // MARK: - SwiftData: hämta alla echoes
     //
-    // Views use @Query to get the live array, then pass it here.
+    // Views use @Query to get the live array.
     // This keeps the ViewModel testable without a live ModelContext.
 
     static func allEchoesDescriptor() -> FetchDescriptor<EchoMemory> {
