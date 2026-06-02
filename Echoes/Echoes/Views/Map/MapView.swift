@@ -16,33 +16,52 @@ struct MapView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    // Startposition  Linköping
-    @State private var cameraPosition: MapCameraPosition = .camera(
-        MapCamera(
-            centerCoordinate: CLLocationCoordinate2D(latitude: 58.4108, longitude: 15.6214),
-            distance: 400 // 400 meter zoom
+    @State private var pulseProgress: Double = 0
+
+    // Följer användarens position + roterar med gångriktningen (Pokémon GO-känsla)
+    @State private var cameraPosition: MapCameraPosition = .userLocation(
+        followsHeading: true,
+        fallback: .camera(
+            MapCamera(
+                centerCoordinate: CLLocationCoordinate2D(latitude: 58.4108, longitude: 15.6214),
+                distance: 400 // 400 meter zoom
+            )
         )
     )
-    
+
     var body: some View {
-        ZStack(alignment: .bottom) { 
-            // 1. map gets their 'hiddenMemories' from  viewModel.swift
-            Map(position: $cameraPosition, interactionModes: .pan) {
+        ZStack(alignment: .bottom) {
+            // 1. map gets their 'visibleMemories' from  viewModel.swift
+            Map(position: $cameraPosition) {
                 UserAnnotation() // blue dot via CoreLocation
-                
-                ForEach(viewModel.hiddenMemories) { memory in
+
+                // Pulserande 200m proximity-ring runt användaren
+                if let userCoord = viewModel.userCoordinate {
+                    MapCircle(center: userCoord, radius: 200)
+                        .foregroundStyle(AppColors.echo.opacity(0.08 + 0.12 * pulseProgress))
+                        .stroke(AppColors.echo.opacity(0.4 + 0.4 * pulseProgress), lineWidth: 1.5)
+                }
+
+                ForEach(viewModel.visibleMemories) { memory in
                     Annotation("", coordinate: memory.coordinate) {
-                        GhostPinView()
+                        EchoPinView(isRevealed: viewModel.activeRegionID == memory.id)
                     }
                 }
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
             .preferredColorScheme(.dark)
             .ignoresSafeArea()
-            .mapControls {
-                MapUserLocationButton()
+            .overlay(alignment: .bottomTrailing) {
+                recenterButton
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 180)
             }
-            
+            .overlay(alignment: .topLeading) {
+                categoryFilter
+                    .padding(.top, 80)
+                    .padding(.leading, 16)
+            }
+
             // 2. Proximity Banner shows when there is memories nearby
             proximityBanner
         }
@@ -50,11 +69,70 @@ struct MapView: View {
         .onAppear {
             viewModel.setupMap()
             viewModel.loadMemories(from: modelContext)
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                pulseProgress = 1
+            }
         }
     }
     
     //  - UI Components
-    
+
+    private var recenterButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                cameraPosition = .userLocation(
+                    followsHeading: true,
+                    fallback: .camera(
+                        MapCamera(
+                            centerCoordinate: viewModel.userCoordinate
+                                ?? CLLocationCoordinate2D(latitude: 58.4108, longitude: 15.6214),
+                            distance: 400
+                        )
+                    )
+                )
+            }
+        } label: {
+            Image(systemName: "location.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary)
+                .frame(width: 44, height: 44)
+                .background(
+                    Circle()
+                        .fill(AppColors.surface)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(AppColors.border, lineWidth: 1)
+                )
+        }
+    }
+
+    private var categoryFilter: some View {
+        VStack(spacing: 12) {
+            ForEach(MemoryCategory.allCases, id: \.self) { category in
+                let isActive = viewModel.activeCategories.contains(category)
+                Button {
+                    viewModel.toggleCategory(category)
+                } label: {
+                    Image(systemName: category.icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(isActive ? AppColors.background : category.color)
+                        .frame(width: 44, height: 44)
+                        .background(
+                            Circle()
+                                .fill(isActive ? category.color : category.color.opacity(0.15))
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(category.color.opacity(isActive ? 1.0 : 0.5), lineWidth: 1.5)
+                        )
+                        .shadow(color: isActive ? category.color.opacity(0.6) : .clear, radius: 8)
+                }
+                .animation(.easeInOut(duration: 0.2), value: isActive)
+            }
+        }
+    }
+
     private var proximityBanner: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             HStack(spacing: AppSpacing.sm) {

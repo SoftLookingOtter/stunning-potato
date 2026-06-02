@@ -101,7 +101,7 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
         _ manager: CLLocationManager,
         didFailWithError error: Error
     ) {
-        print("Location error: \(error.localizedDescription)")
+        // Tyst — vi bryr oss inte om transienta GPS-fel
     }
 
     func startMonitoringRegions(for pins: [EchoPin]) {
@@ -127,6 +127,15 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
             region.notifyOnEntry = true
             region.notifyOnExit = true
             locationManager.startMonitoring(for: region)
+            // Hanterar iOS-quirk: didEnterRegion triggar inte om vi redan är inne i zonen vid start
+            locationManager.requestState(for: region)
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
+        guard state == .inside, let regionID = UUID(uuidString: region.identifier) else { return }
+        DispatchQueue.main.async {
+            self.activeRegionID = regionID
         }
     }
 
