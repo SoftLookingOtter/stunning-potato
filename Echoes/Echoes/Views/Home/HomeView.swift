@@ -16,19 +16,10 @@ struct HomeView: View {
     @Query(HomeViewModel.allEchoesDescriptor()) private var allEchoes: [EchoMemory]
 
     @State private var viewModel = HomeViewModel()
-    @State private var selectedCategory: MemoryCategory?
     @StateObject private var locationService = LocationService()
 
-    private var filteredEchoes: [EchoMemory] {
-        guard let selectedCategory else {
-            return allEchoes
-        }
-
-        return allEchoes.filter { $0.category == selectedCategory }
-    }
-
     private var latestEchoes: [EchoMemory] {
-        Array(filteredEchoes.sorted { $0.date > $1.date }.prefix(5))
+        Array(allEchoes.sorted { $0.date > $1.date }.prefix(3))
     }
 
     var body: some View {
@@ -52,11 +43,10 @@ struct HomeView: View {
                         )
                         .padding(.horizontal, AppSpacing.lg)
 
-                        categoryFilterChips
                         echoFeed
                     }
                     .padding(.top, AppSpacing.xl)
-                    .padding(.bottom, 140)
+                    .padding(.bottom, 110)
                 }
                 .scrollIndicators(.hidden)
             }
@@ -130,75 +120,11 @@ struct HomeView: View {
         .padding(.horizontal, AppSpacing.lg)
     }
 
-    // MARK: - Category filters
-
-    private var categoryFilterChips: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("KATEGORIER")
-                .font(AppTypography.smallCaps)
-                .foregroundStyle(AppColors.textMuted)
-                .tracking(1.4)
-                .padding(.horizontal, AppSpacing.lg)
-
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                HStack {
-                    categoryButton(nil)
-
-                    Spacer()
-                }
-
-                HStack(alignment: .top, spacing: AppSpacing.xl) {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        categoryButton(.historical)
-                        categoryButton(.mysterious)
-                    }
-
-                    Spacer()
-
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        categoryButton(.nostalgic)
-                        categoryButton(.family)
-                    }
-                }
-            }
-            .padding(.horizontal, AppSpacing.lg)
-        }
-    }
-
-    @ViewBuilder
-    private func categoryButton(_ category: MemoryCategory?) -> some View {
-        if let category {
-            Button {
-                selectedCategory = category
-            } label: {
-                CategoryChip(
-                    titleKey: LocalizedStringKey(category.displayName),
-                    systemImage: category.icon,
-                    color: category.color,
-                    isSelected: selectedCategory == category
-                )
-            }
-            .buttonStyle(.plain)
-        } else {
-            Button {
-                selectedCategory = nil
-            } label: {
-                CategoryChip(
-                    titleKey: "Alla",
-                    systemImage: "square.grid.2x2",
-                    color: AppColors.primary,
-                    isSelected: selectedCategory == nil
-                )
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
     // MARK: - Feed
 
     private var echoFeed: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text(feedTitle)
+            Text("SENASTE MINNEN")
                 .font(AppTypography.smallCaps)
                 .foregroundStyle(AppColors.textMuted)
                 .tracking(1.4)
@@ -219,14 +145,6 @@ struct HomeView: View {
         }
     }
 
-    private var feedTitle: String {
-        guard let selectedCategory else {
-            return "SENASTE MINNEN"
-        }
-
-        return "SENASTE: \(selectedCategory.displayName.uppercased())"
-    }
-
     private var emptyState: some View {
         VStack(spacing: AppSpacing.sm) {
             Image(systemName: "sparkles")
@@ -237,7 +155,7 @@ struct HomeView: View {
                 .font(AppTypography.headline)
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text(emptyStateSubtitle)
+            Text("Börja spela in eller utforska kartan för att hitta echoes.")
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
@@ -252,14 +170,6 @@ struct HomeView: View {
         )
         .padding(.horizontal, AppSpacing.lg)
     }
-
-    private var emptyStateSubtitle: String {
-        if let selectedCategory {
-            return "Det finns inga minnen i kategorin \(selectedCategory.displayName) ännu."
-        }
-
-        return "Börja spela in eller välj en kategori för att utforska echoes."
-    }
 }
 
 // MARK: - Stat card
@@ -271,13 +181,9 @@ private struct HomeStatCard: View {
     let color: Color
 
     var body: some View {
-        VStack(spacing: AppSpacing.xs) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(color)
-
+        VStack(spacing: 5) {
             Text("\(value)")
-                .font(AppTypography.title)
+                .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundStyle(color)
 
             Text(label)
@@ -285,9 +191,14 @@ private struct HomeStatCard: View {
                 .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
+
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(color)
+                .padding(.top, 2)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.md)
+        .padding(.vertical, AppSpacing.sm)
         .background(AppColors.surface.opacity(0.88))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
@@ -307,20 +218,20 @@ private struct HomeEchoRow: View {
         HStack(spacing: AppSpacing.md) {
             Circle()
                 .fill(echo.category.color.opacity(0.18))
-                .frame(width: 46, height: 46)
+                .frame(width: 40, height: 40)
                 .overlay(
                     Image(systemName: echo.category.icon)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(echo.category.color)
                 )
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(echo.title)
                     .font(AppTypography.headline)
                     .foregroundStyle(AppColors.textPrimary)
                     .lineLimit(1)
 
-                Text("\(echo.category.displayName) · \(echo.date.formatted(date: .abbreviated, time: .omitted)) · \(echo.plays) spelade")
+                Text("\(echo.category.displayName) · \(echo.date.formatted(date: .abbreviated, time: .omitted))")
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
                     .lineLimit(1)
@@ -331,19 +242,20 @@ private struct HomeEchoRow: View {
 
             Button(action: onPlay) {
                 Image(systemName: "play.fill")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(AppColors.background)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 30, height: 30)
                     .background(AppColors.primary)
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
         }
-        .padding(AppSpacing.md)
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, AppSpacing.sm)
         .background(AppColors.surface.opacity(0.82))
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
-            RoundedRectangle(cornerRadius: 18)
+            RoundedRectangle(cornerRadius: 16)
                 .stroke(AppColors.border, lineWidth: 1)
         )
     }
