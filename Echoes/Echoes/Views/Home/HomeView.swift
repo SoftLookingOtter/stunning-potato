@@ -18,6 +18,16 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @StateObject private var locationService = LocationService()
 
+    private var userInitial: String {
+        let name = auth.currentUser?.name ?? "Echoes"
+        return String(name.prefix(1)).uppercased()
+    }
+
+    private var firstName: String {
+        let name = auth.currentUser?.name ?? "du"
+        return name.components(separatedBy: " ").first ?? name
+    }
+
     private var latestEchoes: [EchoMemory] {
         Array(
             allEchoes
@@ -71,7 +81,7 @@ struct HomeView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("God kväll")
+                Text("God kväll, \(firstName)")
                     .font(AppTypography.largeTitle)
                     .foregroundStyle(AppColors.textPrimary)
 
@@ -90,7 +100,7 @@ struct HomeView: View {
                         .stroke(AppColors.echo.opacity(0.7), lineWidth: 2)
                 )
                 .overlay(
-                    Text("E")
+                    Text(userInitial)
                         .font(AppTypography.title)
                         .foregroundStyle(AppColors.textPrimary)
                 )
