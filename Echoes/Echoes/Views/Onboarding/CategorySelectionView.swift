@@ -2,14 +2,14 @@
 //  CategorySelectionView.swift
 //  Echoes
 //
-//  Updated by Sara Lindén on 2026-05-22.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
 
 struct CategorySelectionView: View {
-    let categories: [String]
-    @Binding var selectedCategories: Set<String>
+    let categories: [MemoryCategory]
+    @Binding var selectedCategories: Set<MemoryCategory>
 
     var body: some View {
         VStack(spacing: AppSpacing.lg) {
@@ -37,12 +37,11 @@ struct CategorySelectionView: View {
                         toggleCategory(category)
                     } label: {
                         CategoryChip(
-                            titleKey: LocalizedStringKey(category),
-                            systemImage: icon(for: category),
-                            color: color(for: category),
+                            titleKey: LocalizedStringKey(category.displayNameKey),
+                            systemImage: category.icon,
+                            color: category.color,
                             isSelected: selectedCategories.contains(category)
                         )
-                        .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
                 }
@@ -51,58 +50,18 @@ struct CategorySelectionView: View {
         }
     }
 
-    private func toggleCategory(_ category: String) {
+    private func toggleCategory(_ category: MemoryCategory) {
         if selectedCategories.contains(category) {
             selectedCategories.remove(category)
         } else {
             selectedCategories.insert(category)
         }
     }
-
-    private func icon(for category: String) -> String {
-        switch category {
-        case "category_nostalgia":
-            return "clock.arrow.circlepath"
-        case "category_history":
-            return "book.closed.fill"
-        case "category_events":
-            return "sparkles"
-        case "category_calm":
-            return "moon.fill"
-        case "category_mystery":
-            return "eye.fill"
-        default:
-            return "circle.fill"
-        }
-    }
-
-    private func color(for category: String) -> Color {
-        switch category {
-        case "category_nostalgia":
-            return AppColors.nostalgia
-        case "category_history":
-            return AppColors.history
-        case "category_events":
-            return AppColors.echo
-        case "category_calm":
-            return AppColors.nature
-        case "category_mystery":
-            return AppColors.mystery
-        default:
-            return AppColors.primary
-        }
-    }
 }
 
 #Preview {
     CategorySelectionView(
-        categories: [
-            "category_nostalgia",
-            "category_history",
-            "category_events",
-            "category_calm",
-            "category_mystery"
-        ],
-        selectedCategories: .constant(["category_nostalgia", "category_mystery"])
+        categories: MemoryCategory.allCases,
+        selectedCategories: .constant([.nostalgic, .mysterious])
     )
 }
