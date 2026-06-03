@@ -27,6 +27,9 @@ struct OnboardingView: View {
             AppColors.background
                 .ignoresSafeArea()
 
+            StarBackgroundView()
+                .ignoresSafeArea()
+
             VStack(spacing: AppSpacing.lg) {
                 topBar
 

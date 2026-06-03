@@ -4,6 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-05-18.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
@@ -14,7 +15,11 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.background.ignoresSafeArea()
+                AppColors.background
+                    .ignoresSafeArea()
+
+                StarBackgroundView()
+                    .ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xl) {
@@ -26,8 +31,10 @@ struct ProfileView: View {
                                     .fill(AppColors.surface)
                                     .frame(width: 90, height: 90)
                                     .overlay(
-                                        Circle().stroke(AppColors.primary.opacity(0.4), lineWidth: 2)
+                                        Circle()
+                                            .stroke(AppColors.primary.opacity(0.4), lineWidth: 2)
                                     )
+
                                 Image(systemName: "person.fill")
                                     .font(.system(size: 38))
                                     .foregroundStyle(AppColors.primary)
@@ -46,9 +53,20 @@ struct ProfileView: View {
 
                         // MARK: Stats
                         HStack(spacing: AppSpacing.md) {
-                            StatCard(value: auth.currentUser?.memoriesCount ?? 0, label: "Minnen")
-                            StatCard(value: auth.currentUser?.playsCount ?? 0,    label: "Spelade")
-                            StatCard(value: auth.currentUser?.likesCount ?? 0,    label: "Likes")
+                            StatCard(
+                                value: auth.currentUser?.memoriesCount ?? 0,
+                                label: "Minnen"
+                            )
+
+                            StatCard(
+                                value: auth.currentUser?.playsCount ?? 0,
+                                label: "Spelade"
+                            )
+
+                            StatCard(
+                                value: auth.currentUser?.likesCount ?? 0,
+                                label: "Likes"
+                            )
                         }
 
                         // MARK: Settings link → sign-out lives there
@@ -57,15 +75,18 @@ struct ProfileView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "gearshape")
+
                                 Text("Inställningar")
                                     .font(AppTypography.headline)
+
                                 Spacer()
+
                                 Image(systemName: "chevron.right")
                                     .font(AppTypography.caption)
                             }
                             .foregroundStyle(AppColors.textPrimary)
                             .padding(AppSpacing.md)
-                            .background(AppColors.surface)
+                            .background(AppColors.surface.opacity(0.88))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
@@ -77,6 +98,7 @@ struct ProfileView: View {
                     }
                     .padding(.horizontal, AppSpacing.lg)
                 }
+                .scrollIndicators(.hidden)
             }
             .navigationTitle("Profil")
             .navigationBarTitleDisplayMode(.inline)
@@ -86,6 +108,7 @@ struct ProfileView: View {
 }
 
 // MARK: - Stat card
+
 private struct StatCard: View {
     let value: Int
     let label: String
@@ -95,13 +118,14 @@ private struct StatCard: View {
             Text("\(value)")
                 .font(AppTypography.title)
                 .foregroundStyle(AppColors.primary)
+
             Text(label)
                 .font(AppTypography.caption)
                 .foregroundStyle(AppColors.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, AppSpacing.md)
-        .background(AppColors.surface)
+        .background(AppColors.surface.opacity(0.88))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)

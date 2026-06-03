@@ -100,8 +100,16 @@ struct CategorySelectionView: View {
 }
 
 #Preview {
-    CategorySelectionView(
-        categories: MemoryCategory.allCases,
-        selectedCategories: .constant([.nostalgic, .historical, .family, .mysterious])
-    )
+    ZStack {
+        AppColors.background
+            .ignoresSafeArea()
+
+        StarBackgroundView()
+            .ignoresSafeArea()
+
+        CategorySelectionView(
+            categories: MemoryCategory.allCases,
+            selectedCategories: .constant([.nostalgic, .historical, .family, .mysterious])
+        )
+    }
 }

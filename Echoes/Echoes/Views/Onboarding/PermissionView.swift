@@ -2,7 +2,7 @@
 //  PermissionView.swift
 //  Echoes
 //
-//  Updated by Sara Lindén on 2026-05-22.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
@@ -86,11 +86,23 @@ struct PermissionView: View {
             Spacer()
         }
         .padding(AppSpacing.md)
-        .background(AppColors.surface)
+        .background(AppColors.surface.opacity(0.88))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(AppColors.border, lineWidth: 1)
+        )
     }
 }
 
 #Preview {
-    PermissionView()
+    ZStack {
+        AppColors.background
+            .ignoresSafeArea()
+
+        StarBackgroundView()
+            .ignoresSafeArea()
+
+        PermissionView()
+    }
 }
