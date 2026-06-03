@@ -4,13 +4,15 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-06-02.
-//
+//  Updated by Mikael Engvall on 2026-06-03
 
 import SwiftUI
 import SwiftData
 
 struct RouteDetailView: View {
     let route: Route
+    
+    @State private var audioService = AudioService()
 
     var body: some View {
         ZStack {
@@ -36,7 +38,16 @@ struct RouteDetailView: View {
                                 location: nil,
                                 imageName: echo.imageName
                             ) {
-                                // Audio playback — wired by Mikael
+                                
+                                guard let path = echo.audioFilePath else {
+                                    print("Ingen ljudfil hittades")
+                                    return
+                                }
+                                
+                                let url = URL(fileURLWithPath: path)
+                                
+                                audioService.playRecording(url: url)
+
                             }
                         }
                     }
