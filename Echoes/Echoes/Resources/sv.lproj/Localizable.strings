@@ -43,3 +43,9 @@
 "tab_record" = "Spela in";
 "tab_routes" = "Rutter";
 "tab_profile" = "Profil";
+
+/* MemoryCategory.swift */
+"category_nostalgia" = "Nostalgi";
+"category_history" = "Historia";
+"category_family" = "Familj";
+"category_mystery" = "Mystik";

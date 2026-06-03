@@ -14,7 +14,17 @@ struct HomeView: View {
     @Environment(AuthViewModel.self) private var auth
     @Environment(\.modelContext) private var context
     @Query(HomeViewModel.allEchoesDescriptor()) private var allEchoes: [EchoMemory]
+
     @State private var viewModel = HomeViewModel()
+    @State private var selectedCategory: MemoryCategory?
+
+    private var filteredEchoes: [EchoMemory] {
+        guard let selectedCategory else {
+            return allEchoes
+        }
+
+        return allEchoes.filter { $0.category == selectedCategory }
+    }
 
     var body: some View {
         NavigationStack {
@@ -37,8 +47,9 @@ struct HomeView: View {
                         echoFeed
                     }
                     .padding(.top, AppSpacing.lg)
-                    .padding(.bottom, AppSpacing.xl)
+                    .padding(.bottom, 140)
                 }
+                .scrollIndicators(.hidden)
             }
             .navigationTitle("Echoes")
             .navigationBarTitleDisplayMode(.inline)
@@ -55,7 +66,7 @@ struct HomeView: View {
                     .font(AppTypography.largeTitle)
                     .foregroundStyle(AppColors.textPrimary)
 
-                Text("\(allEchoes.count) minnen väntar på att upptäckas")
+                Text(headerSubtitle)
                     .font(AppTypography.body)
                     .foregroundStyle(AppColors.textSecondary)
             }
@@ -76,6 +87,14 @@ struct HomeView: View {
                 )
         }
         .padding(.horizontal, AppSpacing.lg)
+    }
+
+    private var headerSubtitle: String {
+        if allEchoes.isEmpty {
+            return "Börja utforska – dina första echoes väntar"
+        }
+
+        return "\(allEchoes.count) echoes väntar på att upptäckas"
     }
 
     // MARK: - Stats
@@ -124,26 +143,26 @@ struct HomeView: View {
                 spacing: AppSpacing.sm
             ) {
                 Button {
-                    viewModel.selectedCategory = nil
+                    selectedCategory = nil
                 } label: {
                     CategoryChip(
                         titleKey: "Alla",
                         systemImage: "square.grid.2x2",
                         color: AppColors.primary,
-                        isSelected: viewModel.selectedCategory == nil
+                        isSelected: selectedCategory == nil
                     )
                 }
                 .buttonStyle(.plain)
 
                 ForEach(MemoryCategory.allCases, id: \.self) { category in
                     Button {
-                        viewModel.selectedCategory = category
+                        selectedCategory = category
                     } label: {
                         CategoryChip(
                             titleKey: LocalizedStringKey(category.displayName),
                             systemImage: category.icon,
                             color: category.color,
-                            isSelected: viewModel.selectedCategory == category
+                            isSelected: selectedCategory == category
                         )
                     }
                     .buttonStyle(.plain)
@@ -157,17 +176,17 @@ struct HomeView: View {
 
     private var echoFeed: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("SENASTE MINNEN")
+            Text(feedTitle)
                 .font(AppTypography.smallCaps)
                 .foregroundStyle(AppColors.textMuted)
                 .tracking(1.4)
                 .padding(.horizontal, AppSpacing.lg)
 
-            if viewModel.filtered(allEchoes).isEmpty {
+            if filteredEchoes.isEmpty {
                 emptyState
             } else {
                 LazyVStack(spacing: AppSpacing.xl) {
-                    ForEach(viewModel.filtered(allEchoes)) { echo in
+                    ForEach(filteredEchoes) { echo in
                         MemoryTicketView(
                             title: echo.title,
                             date: echo.date.formatted(date: .abbreviated, time: .omitted),
@@ -183,6 +202,14 @@ struct HomeView: View {
         }
     }
 
+    private var feedTitle: String {
+        guard let selectedCategory else {
+            return "SENASTE MINNEN"
+        }
+
+        return "SENASTE: \(selectedCategory.displayName.uppercased())"
+    }
+
     private var emptyState: some View {
         VStack(spacing: AppSpacing.sm) {
             Image(systemName: "sparkles")
@@ -193,9 +220,10 @@ struct HomeView: View {
                 .font(AppTypography.headline)
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text("Testa att välja en annan kategori.")
+            Text(emptyStateSubtitle)
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(AppSpacing.lg)
@@ -206,6 +234,14 @@ struct HomeView: View {
                 .stroke(AppColors.border, lineWidth: 1)
         )
         .padding(.horizontal, AppSpacing.lg)
+    }
+
+    private var emptyStateSubtitle: String {
+        if let selectedCategory {
+            return "Det finns inga minnen i kategorin \(selectedCategory.displayName) ännu."
+        }
+
+        return "Börja spela in eller välj en kategori för att utforska echoes."
     }
 }
 

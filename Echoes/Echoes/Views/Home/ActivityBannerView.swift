@@ -25,11 +25,13 @@ struct ActivityBannerView: View {
                     .font(AppTypography.headline)
                     .foregroundStyle(AppColors.textPrimary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
 
                 Text(subtitle)
                     .font(AppTypography.body)
                     .foregroundStyle(AppColors.textSecondary)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
 
             Spacer()
@@ -49,7 +51,7 @@ struct ActivityBannerView: View {
                 .fill(iconColor.opacity(0.18))
                 .frame(width: 36, height: 36)
 
-            Image(systemName: nearestEcho == nil ? "location.slash" : "mappin.and.ellipse")
+            Image(systemName: nearestEcho == nil ? "sparkles" : "mappin.and.ellipse")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(iconColor)
         }
@@ -72,7 +74,7 @@ struct ActivityBannerView: View {
     }
 
     private var iconColor: Color {
-        nearestEcho == nil ? AppColors.textMuted : AppColors.echo
+        nearestEcho == nil ? AppColors.primary : AppColors.echo
     }
 
     private var backgroundColor: Color {
