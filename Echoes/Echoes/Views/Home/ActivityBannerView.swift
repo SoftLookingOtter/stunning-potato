@@ -4,6 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-06-02.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
@@ -11,65 +12,88 @@ import SwiftUI
 struct ActivityBannerView: View {
     let echoes: [EchoMemory]
 
-    private var recentEchoes: [EchoMemory] {
-        Array(echoes.sorted { $0.date > $1.date }.prefix(5))
+    private var nearestEcho: EchoMemory? {
+        echoes.sorted { $0.date > $1.date }.first
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("Senaste aktivitet")
-                .font(AppTypography.caption)
-                .foregroundStyle(AppColors.textSecondary)
-                .padding(.horizontal, AppSpacing.lg)
+        HStack(spacing: AppSpacing.md) {
+            statusIcon
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: AppSpacing.md) {
-                    ForEach(recentEchoes) { echo in
-                        ActivityChip(echo: echo)
-                    }
-                }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.xs)
-            }
-        }
-    }
-}
-
-// MARK: - Single activity chip
-private struct ActivityChip: View {
-    let echo: EchoMemory
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: echo.category.icon)
-                .font(.caption)
-                .foregroundStyle(echo.category.color)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(echo.title)
-                    .font(AppTypography.caption)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(AppTypography.headline)
                     .foregroundStyle(AppColors.textPrimary)
                     .lineLimit(1)
 
-                Text("\(echo.plays) spelade · \(echo.likes) likes")
-                    .font(.caption2)
+                Text(subtitle)
+                    .font(AppTypography.body)
                     .foregroundStyle(AppColors.textSecondary)
+                    .lineLimit(2)
             }
+
+            Spacer()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(AppColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(AppSpacing.md)
+        .background(backgroundColor)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(echo.category.color.opacity(0.4), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(borderColor, lineWidth: 1)
         )
+    }
+
+    private var statusIcon: some View {
+        ZStack {
+            Circle()
+                .fill(iconColor.opacity(0.18))
+                .frame(width: 36, height: 36)
+
+            Image(systemName: nearestEcho == nil ? "location.slash" : "mappin.and.ellipse")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(iconColor)
+        }
+    }
+
+    private var title: String {
+        if nearestEcho == nil {
+            return "Inga minnen nära dig just nu"
+        }
+
+        return "1 minne nära dig nu"
+    }
+
+    private var subtitle: String {
+        guard let nearestEcho else {
+            return "Fortsätt utforska så dyker nya echoes upp i närheten."
+        }
+
+        return "140 m · Storgatan · \(nearestEcho.category.displayName)"
+    }
+
+    private var iconColor: Color {
+        nearestEcho == nil ? AppColors.textMuted : AppColors.echo
+    }
+
+    private var backgroundColor: Color {
+        nearestEcho == nil
+        ? AppColors.surface.opacity(0.82)
+        : AppColors.echo.opacity(0.16)
+    }
+
+    private var borderColor: Color {
+        nearestEcho == nil
+        ? AppColors.border
+        : AppColors.echo.opacity(0.45)
     }
 }
 
 #Preview {
     ZStack {
-        AppColors.background.ignoresSafeArea()
+        AppColors.background
+            .ignoresSafeArea()
+
         ActivityBannerView(echoes: [])
+            .padding()
     }
 }

@@ -28,14 +28,12 @@ struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: AppSpacing.xl) {
                         header
-
                         statsRow
 
                         ActivityBannerView(echoes: allEchoes)
                             .padding(.horizontal, AppSpacing.lg)
 
                         categoryFilterChips
-
                         echoFeed
                     }
                     .padding(.top, AppSpacing.lg)
@@ -85,23 +83,23 @@ struct HomeView: View {
     private var statsRow: some View {
         HStack(spacing: AppSpacing.md) {
             HomeStatCard(
-                value: auth.currentUser?.memoriesCount ?? 0,
-                label: "Minnen",
-                icon: "waveform",
+                value: auth.currentUser?.playsCount ?? 0,
+                label: "Lyssnade",
+                icon: "play.fill",
                 color: AppColors.primary
             )
 
             HomeStatCard(
-                value: auth.currentUser?.playsCount ?? 0,
-                label: "Spelade",
-                icon: "play.fill",
+                value: auth.currentUser?.memoriesCount ?? 0,
+                label: "Inspelade",
+                icon: "waveform",
                 color: AppColors.nature
             )
 
             HomeStatCard(
-                value: auth.currentUser?.likesCount ?? 0,
-                label: "Likes",
-                icon: "heart.fill",
+                value: 0,
+                label: "Utforskat idag",
+                icon: "figure.walk",
                 color: AppColors.echo
             )
         }
@@ -118,36 +116,40 @@ struct HomeView: View {
                 .tracking(1.4)
                 .padding(.horizontal, AppSpacing.lg)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: AppSpacing.sm) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.adaptive(minimum: 120), spacing: AppSpacing.sm)
+                ],
+                alignment: .leading,
+                spacing: AppSpacing.sm
+            ) {
+                Button {
+                    viewModel.selectedCategory = nil
+                } label: {
+                    CategoryChip(
+                        titleKey: "Alla",
+                        systemImage: "square.grid.2x2",
+                        color: AppColors.primary,
+                        isSelected: viewModel.selectedCategory == nil
+                    )
+                }
+                .buttonStyle(.plain)
+
+                ForEach(MemoryCategory.allCases, id: \.self) { category in
                     Button {
-                        viewModel.selectedCategory = nil
+                        viewModel.selectedCategory = category
                     } label: {
                         CategoryChip(
-                            titleKey: "Alla",
-                            systemImage: "square.grid.2x2",
-                            color: AppColors.primary,
-                            isSelected: viewModel.selectedCategory == nil
+                            titleKey: LocalizedStringKey(category.displayName),
+                            systemImage: category.icon,
+                            color: category.color,
+                            isSelected: viewModel.selectedCategory == category
                         )
                     }
                     .buttonStyle(.plain)
-
-                    ForEach(MemoryCategory.allCases, id: \.self) { category in
-                        Button {
-                            viewModel.selectedCategory = category
-                        } label: {
-                            CategoryChip(
-                                titleKey: LocalizedStringKey(category.displayName),
-                                systemImage: category.icon,
-                                color: category.color,
-                                isSelected: viewModel.selectedCategory == category
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
                 }
-                .padding(.horizontal, AppSpacing.lg)
             }
+            .padding(.horizontal, AppSpacing.lg)
         }
     }
 
@@ -228,6 +230,8 @@ private struct HomeStatCard: View {
             Text(label)
                 .font(AppTypography.caption)
                 .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, AppSpacing.md)
