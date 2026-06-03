@@ -4,6 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-06-02.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
@@ -18,81 +19,27 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.background.ignoresSafeArea()
+                AppColors.background
+                    .ignoresSafeArea()
+
+                HomeStarBackground()
+                    .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: AppSpacing.xl) {
+                    VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                        header
 
-                        // MARK: Stats row
-                        HStack(spacing: AppSpacing.md) {
-                            HomeStatCard(
-                                value: auth.currentUser?.memoriesCount ?? 0,
-                                label: "Minnen",
-                                icon: "waveform"
-                            )
-                            HomeStatCard(
-                                value: auth.currentUser?.playsCount ?? 0,
-                                label: "Spelade",
-                                icon: "play.fill"
-                            )
-                            HomeStatCard(
-                                value: auth.currentUser?.likesCount ?? 0,
-                                label: "Likes",
-                                icon: "heart.fill"
-                            )
-                        }
-                        .padding(.horizontal, AppSpacing.lg)
+                        statsRow
 
-                        // MARK: Activity banner
                         ActivityBannerView(echoes: allEchoes)
-
-                        // MARK: Category filter chips
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: AppSpacing.sm) {
-                                Button {
-                                    viewModel.selectedCategory = nil
-                                } label: {
-                                    CategoryChip(
-                                        titleKey: "Alla",
-                                        systemImage: "square.grid.2x2",
-                                        color: AppColors.primary,
-                                        isSelected: viewModel.selectedCategory == nil
-                                    )
-                                }
-
-                                ForEach(MemoryCategory.allCases, id: \.self) { category in
-                                    Button {
-                                        viewModel.selectedCategory = category
-                                    } label: {
-                                        CategoryChip(
-                                            titleKey: LocalizedStringKey(category.displayName),
-                                            systemImage: category.icon,
-                                            color: category.color,
-                                            isSelected: viewModel.selectedCategory == category
-                                        )
-                                    }
-                                }
-                            }
                             .padding(.horizontal, AppSpacing.lg)
-                        }
 
-                        // MARK: Echo feed
-                        LazyVStack(spacing: AppSpacing.xl) {
-                            ForEach(viewModel.filtered(allEchoes)) { echo in
-                                MemoryTicketView(
-                                    title: echo.title,
-                                    date: echo.date.formatted(date: .abbreviated, time: .omitted),
-                                    category: echo.category.displayName,
-                                    location: nil,
-                                    imageName: echo.imageName
-                                ) {
-                                    viewModel.play(echo, auth: auth, in: context)
-                                }
-                            }
-                        }
-                        .padding(.bottom, AppSpacing.xl)
+                        categoryFilterChips
+
+                        echoFeed
                     }
                     .padding(.top, AppSpacing.lg)
+                    .padding(.bottom, AppSpacing.xl)
                 }
             }
             .navigationTitle("Echoes")
@@ -100,34 +47,230 @@ struct HomeView: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("God kväll")
+                    .font(AppTypography.largeTitle)
+                    .foregroundStyle(AppColors.textPrimary)
+
+                Text("\(allEchoes.count) minnen väntar på att upptäckas")
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+
+            Spacer()
+
+            Circle()
+                .fill(AppColors.echo.opacity(0.22))
+                .frame(width: 52, height: 52)
+                .overlay(
+                    Circle()
+                        .stroke(AppColors.echo.opacity(0.7), lineWidth: 2)
+                )
+                .overlay(
+                    Text("E")
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColors.textPrimary)
+                )
+        }
+        .padding(.horizontal, AppSpacing.lg)
+    }
+
+    // MARK: - Stats
+
+    private var statsRow: some View {
+        HStack(spacing: AppSpacing.md) {
+            HomeStatCard(
+                value: auth.currentUser?.memoriesCount ?? 0,
+                label: "Minnen",
+                icon: "waveform",
+                color: AppColors.primary
+            )
+
+            HomeStatCard(
+                value: auth.currentUser?.playsCount ?? 0,
+                label: "Spelade",
+                icon: "play.fill",
+                color: AppColors.nature
+            )
+
+            HomeStatCard(
+                value: auth.currentUser?.likesCount ?? 0,
+                label: "Likes",
+                icon: "heart.fill",
+                color: AppColors.echo
+            )
+        }
+        .padding(.horizontal, AppSpacing.lg)
+    }
+
+    // MARK: - Category filters
+
+    private var categoryFilterChips: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text("KATEGORIER")
+                .font(AppTypography.smallCaps)
+                .foregroundStyle(AppColors.textMuted)
+                .tracking(1.4)
+                .padding(.horizontal, AppSpacing.lg)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.sm) {
+                    Button {
+                        viewModel.selectedCategory = nil
+                    } label: {
+                        CategoryChip(
+                            titleKey: "Alla",
+                            systemImage: "square.grid.2x2",
+                            color: AppColors.primary,
+                            isSelected: viewModel.selectedCategory == nil
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    ForEach(MemoryCategory.allCases, id: \.self) { category in
+                        Button {
+                            viewModel.selectedCategory = category
+                        } label: {
+                            CategoryChip(
+                                titleKey: LocalizedStringKey(category.displayName),
+                                systemImage: category.icon,
+                                color: category.color,
+                                isSelected: viewModel.selectedCategory == category
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, AppSpacing.lg)
+            }
+        }
+    }
+
+    // MARK: - Feed
+
+    private var echoFeed: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            Text("SENASTE MINNEN")
+                .font(AppTypography.smallCaps)
+                .foregroundStyle(AppColors.textMuted)
+                .tracking(1.4)
+                .padding(.horizontal, AppSpacing.lg)
+
+            if viewModel.filtered(allEchoes).isEmpty {
+                emptyState
+            } else {
+                LazyVStack(spacing: AppSpacing.xl) {
+                    ForEach(viewModel.filtered(allEchoes)) { echo in
+                        MemoryTicketView(
+                            title: echo.title,
+                            date: echo.date.formatted(date: .abbreviated, time: .omitted),
+                            category: echo.category.displayName,
+                            location: nil,
+                            imageName: echo.imageName
+                        ) {
+                            viewModel.play(echo, auth: auth, in: context)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: AppSpacing.sm) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(AppColors.primary)
+
+            Text("Inga minnen hittades")
+                .font(AppTypography.headline)
+                .foregroundStyle(AppColors.textPrimary)
+
+            Text("Testa att välja en annan kategori.")
+                .font(AppTypography.body)
+                .foregroundStyle(AppColors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(AppSpacing.lg)
+        .background(AppColors.surface.opacity(0.82))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.border, lineWidth: 1)
+        )
+        .padding(.horizontal, AppSpacing.lg)
+    }
 }
 
 // MARK: - Stat card
+
 private struct HomeStatCard: View {
     let value: Int
     let label: String
     let icon: String
+    let color: Color
 
     var body: some View {
         VStack(spacing: AppSpacing.xs) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundStyle(AppColors.primary)
+                .foregroundStyle(color)
+
             Text("\(value)")
                 .font(AppTypography.title)
-                .foregroundStyle(AppColors.primary)
+                .foregroundStyle(color)
+
             Text(label)
                 .font(AppTypography.caption)
                 .foregroundStyle(AppColors.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, AppSpacing.md)
-        .background(AppColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .background(AppColors.surface.opacity(0.88))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: 16)
                 .stroke(AppColors.border, lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Background
+
+private struct HomeStarBackground: View {
+    private let stars: [(x: CGFloat, y: CGFloat, size: CGFloat, opacity: Double)] = [
+        (0.12, 0.10, 2.0, 0.35),
+        (0.28, 0.18, 1.5, 0.28),
+        (0.72, 0.14, 2.0, 0.35),
+        (0.88, 0.26, 1.5, 0.28),
+        (0.20, 0.42, 2.0, 0.30),
+        (0.55, 0.36, 1.5, 0.25),
+        (0.78, 0.48, 2.0, 0.34),
+        (0.34, 0.62, 1.5, 0.26),
+        (0.66, 0.74, 2.0, 0.30),
+        (0.16, 0.82, 1.5, 0.26),
+        (0.48, 0.88, 2.0, 0.30)
+    ]
+
+    var body: some View {
+        GeometryReader { proxy in
+            ForEach(0..<stars.count, id: \.self) { index in
+                let star = stars[index]
+
+                Circle()
+                    .fill(Color.white.opacity(star.opacity))
+                    .frame(width: star.size, height: star.size)
+                    .position(
+                        x: proxy.size.width * star.x,
+                        y: proxy.size.height * star.y
+                    )
+            }
+        }
     }
 }
 
