@@ -135,40 +135,57 @@ struct HomeView: View {
                 .tracking(1.4)
                 .padding(.horizontal, AppSpacing.lg)
 
-            LazyVGrid(
-                columns: [
-                    GridItem(.adaptive(minimum: 120), spacing: AppSpacing.sm)
-                ],
-                alignment: .leading,
-                spacing: AppSpacing.sm
-            ) {
-                Button {
-                    selectedCategory = nil
-                } label: {
-                    CategoryChip(
-                        titleKey: "Alla",
-                        systemImage: "square.grid.2x2",
-                        color: AppColors.primary,
-                        isSelected: selectedCategory == nil
-                    )
-                }
-                .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                HStack {
+                    categoryButton(nil)
 
-                ForEach(MemoryCategory.allCases, id: \.self) { category in
-                    Button {
-                        selectedCategory = category
-                    } label: {
-                        CategoryChip(
-                            titleKey: LocalizedStringKey(category.displayName),
-                            systemImage: category.icon,
-                            color: category.color,
-                            isSelected: selectedCategory == category
-                        )
+                    Spacer()
+                }
+
+                HStack(alignment: .top, spacing: AppSpacing.xl) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        categoryButton(.historical)
+                        categoryButton(.mysterious)
                     }
-                    .buttonStyle(.plain)
+
+                    Spacer()
+
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        categoryButton(.nostalgic)
+                        categoryButton(.family)
+                    }
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
+        }
+    }
+
+    @ViewBuilder
+    private func categoryButton(_ category: MemoryCategory?) -> some View {
+        if let category {
+            Button {
+                selectedCategory = category
+            } label: {
+                CategoryChip(
+                    titleKey: LocalizedStringKey(category.displayName),
+                    systemImage: category.icon,
+                    color: category.color,
+                    isSelected: selectedCategory == category
+                )
+            }
+            .buttonStyle(.plain)
+        } else {
+            Button {
+                selectedCategory = nil
+            } label: {
+                CategoryChip(
+                    titleKey: "Alla",
+                    systemImage: "square.grid.2x2",
+                    color: AppColors.primary,
+                    isSelected: selectedCategory == nil
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
