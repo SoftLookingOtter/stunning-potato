@@ -17,6 +17,7 @@ struct HomeView: View {
 
     @State private var viewModel = HomeViewModel()
     @State private var selectedCategory: MemoryCategory?
+    @StateObject private var locationService = LocationService()
 
     private var filteredEchoes: [EchoMemory] {
         guard let selectedCategory else {
@@ -40,8 +41,12 @@ struct HomeView: View {
                         header
                         statsRow
 
-                        ActivityBannerView(echoes: allEchoes)
-                            .padding(.horizontal, AppSpacing.lg)
+                        ActivityBannerView(
+                            echoes: allEchoes,
+                            userLocation: locationService.userLocation,
+                            activeRegionID: locationService.activeRegionID
+                        )
+                        .padding(.horizontal, AppSpacing.lg)
 
                         categoryFilterChips
                         echoFeed
@@ -54,6 +59,12 @@ struct HomeView: View {
             .navigationTitle("Echoes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .onAppear {
+                locationService.startTracking()
+            }
+            .onDisappear {
+                locationService.stopTracking()
+            }
         }
     }
 
@@ -90,11 +101,7 @@ struct HomeView: View {
     }
 
     private var headerSubtitle: String {
-        if allEchoes.isEmpty {
-            return "Börja utforska – dina första echoes väntar"
-        }
-
-        return "\(allEchoes.count) echoes väntar på att upptäckas"
+        "Redo att upptäcka något nytt?"
     }
 
     // MARK: - Stats

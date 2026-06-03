@@ -8,12 +8,50 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct ActivityBannerView: View {
     let echoes: [EchoMemory]
+    let userLocation: CLLocation?
+    let activeRegionID: UUID?
 
-    private var nearestEcho: EchoMemory? {
-        echoes.sorted { $0.date > $1.date }.first
+    private let nearbyRadius: CLLocationDistance = 200
+
+    private var activeEchoInfo: (echo: EchoMemory, distance: CLLocationDistance?)? {
+        if let activeRegionID,
+           let echo = echoes.first(where: { $0.id == activeRegionID }) {
+            return (
+                echo: echo,
+                distance: distance(to: echo)
+            )
+        }
+
+        guard let nearest = nearestEchoInfo,
+              nearest.distance <= nearbyRadius else {
+            return nil
+        }
+
+        return nearest
+    }
+
+    private var nearestEchoInfo: (echo: EchoMemory, distance: CLLocationDistance)? {
+        guard let userLocation else {
+            return nil
+        }
+
+        return echoes
+            .map { echo in
+                let echoLocation = CLLocation(
+                    latitude: echo.latitude,
+                    longitude: echo.longitude
+                )
+
+                let distance = userLocation.distance(from: echoLocation)
+
+                return (echo: echo, distance: distance)
+            }
+            .sorted { $0.distance < $1.distance }
+            .first
     }
 
     var body: some View {
@@ -51,14 +89,14 @@ struct ActivityBannerView: View {
                 .fill(iconColor.opacity(0.18))
                 .frame(width: 36, height: 36)
 
-            Image(systemName: nearestEcho == nil ? "sparkles" : "mappin.and.ellipse")
+            Image(systemName: activeEchoInfo == nil ? "sparkles" : "mappin.and.ellipse")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(iconColor)
         }
     }
 
     private var title: String {
-        if nearestEcho == nil {
+        guard activeEchoInfo != nil else {
             return "Inga minnen nära dig just nu"
         }
 
@@ -66,27 +104,55 @@ struct ActivityBannerView: View {
     }
 
     private var subtitle: String {
-        guard let nearestEcho else {
+        guard let activeEchoInfo else {
             return "Fortsätt utforska så dyker nya echoes upp i närheten."
         }
 
-        return "140 m · Storgatan · \(nearestEcho.category.displayName)"
+        let category = activeEchoInfo.echo.category.displayName
+
+        if let distance = activeEchoInfo.distance {
+            return "\(formatDistance(distance)) · \(category)"
+        }
+
+        return category
     }
 
     private var iconColor: Color {
-        nearestEcho == nil ? AppColors.primary : AppColors.echo
+        activeEchoInfo == nil ? AppColors.primary : AppColors.echo
     }
 
     private var backgroundColor: Color {
-        nearestEcho == nil
+        activeEchoInfo == nil
         ? AppColors.surface.opacity(0.82)
         : AppColors.echo.opacity(0.16)
     }
 
     private var borderColor: Color {
-        nearestEcho == nil
+        activeEchoInfo == nil
         ? AppColors.border
         : AppColors.echo.opacity(0.45)
+    }
+
+    private func distance(to echo: EchoMemory) -> CLLocationDistance? {
+        guard let userLocation else {
+            return nil
+        }
+
+        let echoLocation = CLLocation(
+            latitude: echo.latitude,
+            longitude: echo.longitude
+        )
+
+        return userLocation.distance(from: echoLocation)
+    }
+
+    private func formatDistance(_ distance: CLLocationDistance) -> String {
+        if distance < 1000 {
+            return "\(Int(distance.rounded())) m"
+        }
+
+        let kilometers = distance / 1000
+        return String(format: "%.1f km", kilometers)
     }
 }
 
@@ -95,7 +161,11 @@ struct ActivityBannerView: View {
         AppColors.background
             .ignoresSafeArea()
 
-        ActivityBannerView(echoes: [])
-            .padding()
+        ActivityBannerView(
+            echoes: [],
+            userLocation: nil,
+            activeRegionID: nil
+        )
+        .padding()
     }
 }
