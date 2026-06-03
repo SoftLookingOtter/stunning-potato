@@ -121,11 +121,9 @@ class MapViewModel: ObservableObject {
     }
 
     func setupMap() {
-        locationService.requestLocationPermission()
+        // Permissions are requested during onboarding.
+        // Map only starts tracking if permission has already been granted.
         locationService.startTracking()
-        Task {
-            _ = await notificationService.requestNotificationPermission()
-        }
     }
 
     func loadMemories(from context: ModelContext) {
