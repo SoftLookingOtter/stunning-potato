@@ -49,7 +49,6 @@ struct ProfileView: View {
                                 .font(AppTypography.body)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
-                        .padding(.top, AppSpacing.xl)
 
                         // MARK: Stats
                         HStack(spacing: AppSpacing.md) {
@@ -97,12 +96,12 @@ struct ProfileView: View {
                         Spacer(minLength: AppSpacing.xl)
                     }
                     .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, AppSpacing.xl)
+                    .padding(.bottom, 110)
                 }
                 .scrollIndicators(.hidden)
             }
-            .navigationTitle("Profil")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

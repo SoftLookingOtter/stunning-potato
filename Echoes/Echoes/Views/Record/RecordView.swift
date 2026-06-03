@@ -57,8 +57,19 @@ struct RecordView: View {
                         )
                     }
 
+                    if !viewModel.errorMessage.isEmpty {
+                        Text(viewModel.errorMessage)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.people)
+                            .multilineTextAlignment(.center)
+                    }
+
                     RecordButton(isRecording: viewModel.isRecording) {
                         viewModel.toggleRecording()
+                    }
+
+                    if viewModel.recordedAudioURL != nil && !viewModel.isRecording {
+                        RecordingReadyBanner()
                     }
 
                     Button {
@@ -98,7 +109,7 @@ struct RecordView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, AppSpacing.lg)
-                .padding(.top, AppSpacing.xl * 2)
+                .padding(.top, AppSpacing.xl)
                 .padding(.bottom, 130)
             }
             .scrollIndicators(.hidden)
@@ -142,6 +153,43 @@ private struct EchoInputField: View {
                 )
                 .tint(AppColors.primary)
         }
+    }
+}
+
+// MARK: - Recording ready banner
+
+private struct RecordingReadyBanner: View {
+    var body: some View {
+        HStack(spacing: AppSpacing.sm) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.nature.opacity(0.18))
+                    .frame(width: 34, height: 34)
+
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(AppColors.nature)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Ljud inspelat")
+                    .font(AppTypography.headline)
+                    .foregroundStyle(AppColors.textPrimary)
+
+                Text("Redo att sparas som ett minne.")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+
+            Spacer()
+        }
+        .padding(AppSpacing.md)
+        .background(AppColors.nature.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(AppColors.nature.opacity(0.35), lineWidth: 1)
+        )
     }
 }
 
