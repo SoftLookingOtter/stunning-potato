@@ -3,7 +3,7 @@
 //  Echoes
 //
 //  Created by Sara Lindén on 2026-05-17.
-//  Updated by Sara Lindén on 2026-05-18.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
@@ -17,8 +17,11 @@ enum AppColors {
     static let primary = Color(red: 0.95, green: 0.64, blue: 0.18)
     static let primarySoft = Color(red: 0.45, green: 0.30, blue: 0.10)
 
-    // Categories
+    // General echo color
     static let echo = Color(red: 0.55, green: 0.43, blue: 0.95)
+
+    // Category colors
+    static let allCategories = Color(red: 0.70, green: 0.64, blue: 0.95)
     static let history = Color(red: 0.36, green: 0.62, blue: 0.95)
     static let nature = Color(red: 0.38, green: 0.82, blue: 0.55)
     static let people = Color(red: 0.95, green: 0.42, blue: 0.42)

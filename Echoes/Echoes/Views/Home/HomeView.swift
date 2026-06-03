@@ -19,7 +19,13 @@ struct HomeView: View {
     @StateObject private var locationService = LocationService()
 
     private var latestEchoes: [EchoMemory] {
-        Array(allEchoes.sorted { $0.date > $1.date }.prefix(3))
+        Array(
+            allEchoes
+                .sorted {
+                    ($0.discoveredAt ?? $0.date) > ($1.discoveredAt ?? $1.date)
+                }
+                .prefix(3)
+        )
     }
 
     var body: some View {
@@ -231,7 +237,7 @@ private struct HomeEchoRow: View {
                     .foregroundStyle(AppColors.textPrimary)
                     .lineLimit(1)
 
-                Text("\(echo.category.displayName) · \(echo.date.formatted(date: .abbreviated, time: .omitted))")
+                Text(echoSubtitle)
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
                     .lineLimit(1)
@@ -258,6 +264,14 @@ private struct HomeEchoRow: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(AppColors.border, lineWidth: 1)
         )
+    }
+
+    private var echoSubtitle: String {
+        if let discoveredAt = echo.discoveredAt {
+            return "\(echo.category.displayName) · Upptäckt \(discoveredAt.formatted(date: .abbreviated, time: .omitted))"
+        }
+
+        return "\(echo.category.displayName) · Skapad \(echo.date.formatted(date: .abbreviated, time: .omitted))"
     }
 }
 

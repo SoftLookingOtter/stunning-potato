@@ -4,6 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-05-18.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftData
@@ -23,11 +24,11 @@ class EchoMemory {
     var imageName: String?
     var likes: Int
     var plays: Int
+    var discoveredAt: Date?
 
-    
     var route: Route?
 
-    // Computed helper for MapKit 
+    // Computed helper for MapKit
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
@@ -47,8 +48,11 @@ class EchoMemory {
         self.category = category
         self.latitude = latitude
         self.longitude = longitude
+        self.audioFilePath = nil
+        self.imageName = nil
         self.likes = 0
         self.plays = 0
+        self.discoveredAt = nil
     }
 
     /// Convenience for creating an EchoMemory from a finished audio recording.
@@ -70,6 +74,7 @@ class EchoMemory {
             latitude: latitude,
             longitude: longitude
         )
+
         self.audioFilePath = url.path
     }
 }
