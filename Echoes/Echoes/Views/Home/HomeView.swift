@@ -27,6 +27,10 @@ struct HomeView: View {
         return allEchoes.filter { $0.category == selectedCategory }
     }
 
+    private var latestEchoes: [EchoMemory] {
+        Array(filteredEchoes.sorted { $0.date > $1.date }.prefix(5))
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -51,14 +55,12 @@ struct HomeView: View {
                         categoryFilterChips
                         echoFeed
                     }
-                    .padding(.top, AppSpacing.lg)
+                    .padding(.top, AppSpacing.xl)
                     .padding(.bottom, 140)
                 }
                 .scrollIndicators(.hidden)
             }
-            .navigationTitle("Echoes")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 locationService.startTracking()
             }
@@ -77,7 +79,7 @@ struct HomeView: View {
                     .font(AppTypography.largeTitle)
                     .foregroundStyle(AppColors.textPrimary)
 
-                Text(headerSubtitle)
+                Text("Redo att upptäcka något nytt?")
                     .font(AppTypography.body)
                     .foregroundStyle(AppColors.textSecondary)
             }
@@ -98,10 +100,6 @@ struct HomeView: View {
                 )
         }
         .padding(.horizontal, AppSpacing.lg)
-    }
-
-    private var headerSubtitle: String {
-        "Redo att upptäcka något nytt?"
     }
 
     // MARK: - Stats
@@ -206,22 +204,17 @@ struct HomeView: View {
                 .tracking(1.4)
                 .padding(.horizontal, AppSpacing.lg)
 
-            if filteredEchoes.isEmpty {
+            if latestEchoes.isEmpty {
                 emptyState
             } else {
-                LazyVStack(spacing: AppSpacing.xl) {
-                    ForEach(filteredEchoes) { echo in
-                        MemoryTicketView(
-                            title: echo.title,
-                            date: echo.date.formatted(date: .abbreviated, time: .omitted),
-                            category: echo.category.displayName,
-                            location: nil,
-                            imageName: echo.imageName
-                        ) {
+                VStack(spacing: AppSpacing.md) {
+                    ForEach(latestEchoes) { echo in
+                        HomeEchoRow(echo: echo) {
                             viewModel.play(echo, auth: auth, in: context)
                         }
                     }
                 }
+                .padding(.horizontal, AppSpacing.lg)
             }
         }
     }
@@ -299,6 +292,58 @@ private struct HomeStatCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
+                .stroke(AppColors.border, lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Echo row
+
+private struct HomeEchoRow: View {
+    let echo: EchoMemory
+    let onPlay: () -> Void
+
+    var body: some View {
+        HStack(spacing: AppSpacing.md) {
+            Circle()
+                .fill(echo.category.color.opacity(0.18))
+                .frame(width: 46, height: 46)
+                .overlay(
+                    Image(systemName: echo.category.icon)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(echo.category.color)
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(echo.title)
+                    .font(AppTypography.headline)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(1)
+
+                Text("\(echo.category.displayName) · \(echo.date.formatted(date: .abbreviated, time: .omitted)) · \(echo.plays) spelade")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            Spacer()
+
+            Button(action: onPlay) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(AppColors.background)
+                    .frame(width: 34, height: 34)
+                    .background(AppColors.primary)
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(AppSpacing.md)
+        .background(AppColors.surface.opacity(0.82))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
                 .stroke(AppColors.border, lineWidth: 1)
         )
     }
