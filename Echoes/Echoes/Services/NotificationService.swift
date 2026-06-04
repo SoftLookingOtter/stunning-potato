@@ -89,6 +89,16 @@ final class NotificationService {
     }
 
     func scheduleProximityNotifications(for pins: [EchoPin]) {
+        cancelAllProximityNotifications()
         pins.forEach { scheduleProximityNotification(for: $0) }
+    }
+
+    func cancelAllProximityNotifications() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let proximityIDs = requests
+                .map { $0.identifier }
+                .filter { $0.hasPrefix("proximity-") }
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: proximityIDs)
+        }
     }
 }

@@ -29,11 +29,7 @@ class MapViewModel: ObservableObject {
     private let notificationService = NotificationService()
 
 
-    @Published var hiddenMemories: [EchoPin] = [
-        EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4118, longitude: 15.6224)),
-        EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4098, longitude: 15.6184)),
-        EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4120, longitude: 15.6150))
-    ]
+    @Published var hiddenMemories: [EchoPin] = []
 
     @Published var distanceToNearestMemory: Double?
     @Published var memoriesWithinRangeCount: Int = 0
@@ -50,8 +46,11 @@ class MapViewModel: ObservableObject {
     }
 
     private static let proximityRadiusMeters: Double = 200
+    private static let minMovementForUpdateMeters: Double = 5
 
     private var cancellables = Set<AnyCancellable>()
+    private var pinLocationCache: [UUID: CLLocation] = [:]
+    private var lastProximityLocation: CLLocation?
 
     #if DEBUG
     private static let testMemoryOffsetMeters: Double = 250
@@ -88,18 +87,33 @@ class MapViewModel: ObservableObject {
             longitude: location.coordinate.longitude
         ))
         hiddenMemories.append(testPin)
+        rebuildPinLocationCache()
         locationService.startMonitoringRegions(for: hiddenMemories)
     }
     #endif
 
     private func updateProximity(for userLocation: CLLocation) {
+        // Throttla: hoppa ut om användaren rört sig mindre än 5m sen senaste uträkningen
+        if let last = lastProximityLocation,
+           userLocation.distance(from: last) < Self.minMovementForUpdateMeters {
+            return
+        }
+        lastProximityLocation = userLocation
+
         let distances = visibleMemories.map { pin -> Double in
-            let pinLocation = CLLocation(latitude: pin.coordinate.latitude, longitude: pin.coordinate.longitude)
-            return userLocation.distance(from: pinLocation)
+            let cached = pinLocationCache[pin.id]
+                ?? CLLocation(latitude: pin.coordinate.latitude, longitude: pin.coordinate.longitude)
+            return userLocation.distance(from: cached)
         }
 
         distanceToNearestMemory = distances.min()
         memoriesWithinRangeCount = distances.filter { $0 <= Self.proximityRadiusMeters }.count
+    }
+
+    private func rebuildPinLocationCache() {
+        pinLocationCache = Dictionary(uniqueKeysWithValues: hiddenMemories.map { pin in
+            (pin.id, CLLocation(latitude: pin.coordinate.latitude, longitude: pin.coordinate.longitude))
+        })
     }
 
     func toggleCategory(_ category: MemoryCategory) {
@@ -109,6 +123,8 @@ class MapViewModel: ObservableObject {
             activeCategories.insert(category)
         }
         updateMonitoringForVisibleMemories()
+        // Tvinga omräkning även om användaren inte rört sig
+        lastProximityLocation = nil
         if let location = locationService.userLocation {
             updateProximity(for: location)
         }
@@ -137,6 +153,7 @@ class MapViewModel: ObservableObject {
         hiddenMemories = memories.map { memory in
             EchoPin(id: memory.id, coordinate: memory.coordinate, category: memory.category)
         }
+        rebuildPinLocationCache()
         updateMonitoringForVisibleMemories()
     }
 
