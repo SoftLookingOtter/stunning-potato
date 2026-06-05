@@ -142,6 +142,9 @@ private struct EchoInputField: View {
                 )
                 .tint(AppColors.primary)
         }
+        .alert("Minne sparat!", isPresented: $ShowConfirmation) {
+            Button("OK", role: .cancel) { }
+        }
     }
 }
 
