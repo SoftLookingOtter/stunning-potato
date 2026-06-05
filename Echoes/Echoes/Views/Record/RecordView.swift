@@ -126,19 +126,19 @@ private struct EchoInputField: View {
     let icon: String
     var axis: Axis = .horizontal
     var minHeight: CGFloat = 52
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
             HStack(spacing: AppSpacing.xs) {
                 Image(systemName: icon)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppColors.primary)
-
+                
                 Text(title)
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }
-
+            
             TextField(placeholder, text: $text, axis: axis)
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.textPrimary)
@@ -153,9 +153,6 @@ private struct EchoInputField: View {
                 )
                 .tint(AppColors.primary)
         }
-        .alert("Minne sparat!", isPresented: $ShowConfirmation) {
-            Button("OK", role: .cancel) { }
-        }
     }
 }
 
@@ -168,22 +165,22 @@ private struct RecordingReadyBanner: View {
                 Circle()
                     .fill(AppColors.nature.opacity(0.18))
                     .frame(width: 34, height: 34)
-
+                
                 Image(systemName: "checkmark")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(AppColors.nature)
             }
-
+            
             VStack(alignment: .leading, spacing: 2) {
                 Text("Ljud inspelat")
                     .font(AppTypography.headline)
                     .foregroundStyle(AppColors.textPrimary)
-
+                
                 Text("Redo att sparas som ett minne.")
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }
-
+            
             Spacer()
         }
         .padding(AppSpacing.md)
