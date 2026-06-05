@@ -112,21 +112,21 @@ struct HomeView: View {
 
     private var statsRow: some View {
         HStack(spacing: AppSpacing.md) {
-            HomeStatCard(
+            EchoStatCard(
                 value: auth.currentUser?.playsCount ?? 0,
                 label: "Lyssnade",
                 icon: "play.fill",
                 color: AppColors.primary
             )
 
-            HomeStatCard(
+            EchoStatCard(
                 value: auth.currentUser?.memoriesCount ?? 0,
                 label: "Inspelade",
                 icon: "waveform",
                 color: AppColors.nature
             )
 
-            HomeStatCard(
+            EchoStatCard(
                 value: 0,
                 label: "Utforskat idag",
                 icon: "figure.walk",
@@ -185,42 +185,6 @@ struct HomeView: View {
                 .stroke(AppColors.border, lineWidth: 1)
         )
         .padding(.horizontal, AppSpacing.lg)
-    }
-}
-
-// MARK: - Stat card
-
-private struct HomeStatCard: View {
-    let value: Int
-    let label: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 5) {
-            Text("\(value)")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(color)
-
-            Text(label)
-                .font(AppTypography.caption)
-                .foregroundStyle(AppColors.textSecondary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(color)
-                .padding(.top, 2)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.sm)
-        .background(AppColors.surface.opacity(0.88))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(AppColors.border, lineWidth: 1)
-        )
     }
 }
 
