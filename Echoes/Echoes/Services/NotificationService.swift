@@ -3,7 +3,8 @@
 //  Echoes
 //
 //  Updated by Sara Lindén on 2026-05-22.
-//  Updated by Robin Eliasson on 2026-05-26
+//  Updated by Robin Eliasson on 2026-05-26.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import Foundation
@@ -17,6 +18,10 @@ final class NotificationService {
     static let listenNowActionID = "listen-now"
     static let laterActionID = "later"
     static let proximityCategoryID = "proximity-memory"
+
+    private var notificationsEnabled: Bool {
+        UserDefaults.standard.object(forKey: "notificationsEnabled") as? Bool ?? true
+    }
 
     func requestNotificationPermission() async -> Bool {
         await withCheckedContinuation { continuation in
@@ -60,11 +65,17 @@ final class NotificationService {
     }
 
     func scheduleProximityNotification(for pin: EchoPin) {
+        guard notificationsEnabled else {
+            print("Notifications are disabled in app settings.")
+            return
+        }
+
         let region = CLCircularRegion(
             center: pin.coordinate,
             radius: Self.proximityRadiusMeters,
             identifier: pin.id.uuidString
         )
+
         region.notifyOnEntry = true
         region.notifyOnExit = false
 
@@ -74,7 +85,11 @@ final class NotificationService {
         content.sound = .default
         content.categoryIdentifier = Self.proximityCategoryID
 
-        let trigger = UNLocationNotificationTrigger(region: region, repeats: false)
+        let trigger = UNLocationNotificationTrigger(
+            region: region,
+            repeats: false
+        )
+
         let request = UNNotificationRequest(
             identifier: "proximity-\(pin.id.uuidString)",
             content: content,
@@ -89,6 +104,13 @@ final class NotificationService {
     }
 
     func scheduleProximityNotifications(for pins: [EchoPin]) {
-        pins.forEach { scheduleProximityNotification(for: $0) }
+        guard notificationsEnabled else {
+            print("Notifications are disabled in app settings.")
+            return
+        }
+
+        pins.forEach { pin in
+            scheduleProximityNotification(for: pin)
+        }
     }
 }

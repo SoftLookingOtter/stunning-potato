@@ -51,7 +51,11 @@ final class AudioService {
 
     // This only checks permission. It does not trigger the system permission popup.
     var hasMicrophonePermission: Bool {
-        AVAudioSession.sharedInstance().recordPermission == .granted
+        if #available(iOS 17.0, *) {
+            return AVAudioApplication.shared.recordPermission == .granted
+        } else {
+            return AVAudioSession.sharedInstance().recordPermission == .granted
+        }
     }
 
     private func getRecordingURL() -> URL {

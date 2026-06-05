@@ -32,6 +32,7 @@ struct RouteListView: View {
                     Text("Rutter")
                         .font(AppTypography.title)
                         .foregroundStyle(AppColors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .center)
 
                     Button {
                         withAnimation {
@@ -117,11 +118,9 @@ struct RouteListView: View {
                     .scrollIndicators(.hidden)
                 }
                 .padding(.horizontal, AppSpacing.lg)
-                .padding(.top, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
             }
-            .navigationTitle("Rutter")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
