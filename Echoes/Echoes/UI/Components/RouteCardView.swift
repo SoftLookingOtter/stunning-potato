@@ -3,7 +3,7 @@
 //  Echoes
 //
 //  Created by Mikael Engvall on 2026-05-30.
-//
+//  Updated by Mikael Engvall on 2026-04-05
 
 import SwiftUI
 
@@ -13,15 +13,21 @@ struct RouteCardView: View {
     let memoryCount: Int
     let distance: Double
     let rating: Double
+    let category: MemoryCategory
+    
+    private var bannerColor: Color {
+        category.color
+    }
     
     var body: some View {
         
+        
         VStack(spacing: 0) {
             
-            //RoundedRectangle(cornerRadius: 24)
             Rectangle()
-                .fill(AppColors.primarySoft)
+                .fill(bannerColor)
                 .frame(height: 40)
+                
             
             HStack {
                 
@@ -58,7 +64,8 @@ struct RouteCardView: View {
             title: "Linköpings gamla handel",
             memoryCount: 6,
             distance: 1.2,
-            rating: 4.8
+            rating: 4.8,
+            category: .nostalgic
         )
             .padding()
     }

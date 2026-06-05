@@ -85,8 +85,9 @@ struct RouteListView: View {
                                     RouteCardView(
                                         title: route.title,
                                         memoryCount: route.echoes.count,
-                                        distance: 0,
-                                        rating: 0
+                                        distance: route.distance,
+                                        rating: Double(route.rating),
+                                        category: route.category
                                     )
                                 }
                             }
