@@ -2,9 +2,9 @@
 //  AudioService.swift
 //  Echoes
 //
-//  
-//  Updated by Mikael Engvall on 2026-05-18
-//  Updated by Sara Lindén on 2026-05-22.
+//  Updated by Mikael Engvall on 2026-05-18.
+//  Updated by Sara Lindén on 2026-06-03.
+//
 
 import AVFoundation
 import Observation
@@ -14,6 +14,7 @@ final class AudioService {
 
     @ObservationIgnored private var audioRecorder: AVAudioRecorder?
     @ObservationIgnored private var audioPlayer: AVAudioPlayer?
+
     private(set) var recordedAudioURL: URL?
 
     init() {
@@ -31,6 +32,7 @@ final class AudioService {
         }
     }
 
+    // This should only be called from onboarding / permission flow.
     func requestMicrophonePermission() async -> Bool {
         if #available(iOS 17.0, *) {
             return await withCheckedContinuation { continuation in
@@ -47,6 +49,11 @@ final class AudioService {
         }
     }
 
+    // This only checks permission. It does not trigger the system permission popup.
+    var hasMicrophonePermission: Bool {
+        AVAudioSession.sharedInstance().recordPermission == .granted
+    }
+
     private func getRecordingURL() -> URL {
         let documentsPath = FileManager.default.urls(
             for: .documentDirectory,
@@ -54,11 +61,16 @@ final class AudioService {
         )[0]
 
         let fileName = UUID().uuidString + ".m4a"
-
         return documentsPath.appendingPathComponent(fileName)
     }
 
-    func startRecording() {
+    @discardableResult
+    func startRecording() -> Bool {
+        guard hasMicrophonePermission else {
+            print("Microphone permission has not been granted.")
+            return false
+        }
+
         let audioURL = getRecordingURL()
         recordedAudioURL = audioURL
 
@@ -80,8 +92,10 @@ final class AudioService {
 
             print("Recording started")
             print("File saved at: \(audioURL)")
+            return true
         } catch {
             print("Failed to start recording: \(error.localizedDescription)")
+            return false
         }
     }
 
@@ -110,10 +124,8 @@ final class AudioService {
 
         print("Playback stopped")
     }
-    
+
     func getRecordedAudioURL() -> URL? {
         recordedAudioURL
     }
-    
-    
 }

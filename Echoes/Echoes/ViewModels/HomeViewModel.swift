@@ -4,6 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-05-28.
+//  Updated by Sara Lindén on 2026-06-03
 //
 
 import SwiftData
@@ -25,29 +26,29 @@ final class HomeViewModel {
             UserDefaults.standard.set(newValue?.rawValue, forKey: "selectedCategory")
         }
     }
+
     var searchText: String = ""
 
     // MARK: - SwiftData: hämta alla echoes
-    //
-    // Views use @Query to get the live array.
-    // This keeps the ViewModel testable without a live ModelContext.
 
     static func allEchoesDescriptor() -> FetchDescriptor<EchoMemory> {
         var descriptor = FetchDescriptor<EchoMemory>(
-            sortBy: [SortDescriptor(\.date, order: .reverse)]
+            sortBy: [SortDescriptor(\.discoveredAt, order: .reverse)]
         )
         descriptor.fetchLimit = 200
         return descriptor
     }
 
-    // MARK: - SwiftData: filtrera echoes på kategori
+    // MARK: - SwiftData: filtrera echoes på kategori och söktext
 
     func filtered(_ echoes: [EchoMemory]) -> [EchoMemory] {
         echoes.filter { echo in
             let matchesCategory = selectedCategory == nil || echo.category == selectedCategory
+
             let matchesSearch = searchText.isEmpty
                 || echo.title.localizedCaseInsensitiveContains(searchText)
                 || echo.story.localizedCaseInsensitiveContains(searchText)
+
             return matchesCategory && matchesSearch
         }
     }
@@ -64,7 +65,9 @@ final class HomeViewModel {
         audioURL: URL? = nil,
         in context: ModelContext
     ) -> EchoMemory {
+        let discoveredAt = Date()
         let echo: EchoMemory
+
         if let url = audioURL {
             echo = EchoMemory(
                 recordingAt: url,
@@ -83,11 +86,15 @@ final class HomeViewModel {
                 longitude: longitude
             )
         }
+
+        echo.discoveredAt = discoveredAt
+
         context.insert(echo)
         try? context.save()
+
         return echo
     }
-
+    
     // MARK: - SwiftData: uppdatera likes/plays lokalt
 
     func like(_ echo: EchoMemory, auth: AuthViewModel, in context: ModelContext) {

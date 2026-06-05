@@ -2,14 +2,18 @@
 //  CategorySelectionView.swift
 //  Echoes
 //
-//  Updated by Sara Lindén on 2026-05-22.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
 
 struct CategorySelectionView: View {
-    let categories: [String]
-    @Binding var selectedCategories: Set<String>
+    let categories: [MemoryCategory]
+    @Binding var selectedCategories: Set<MemoryCategory>
+
+    private var areAllCategoriesSelected: Bool {
+        Set(categories).isSubset(of: selectedCategories)
+    }
 
     var body: some View {
         VStack(spacing: AppSpacing.lg) {
@@ -25,33 +29,60 @@ struct CategorySelectionView: View {
                     .padding(.horizontal, AppSpacing.lg)
             }
 
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ],
-                spacing: AppSpacing.md
-            ) {
-                ForEach(categories, id: \.self) { category in
-                    Button {
-                        toggleCategory(category)
-                    } label: {
-                        CategoryChip(
-                            titleKey: LocalizedStringKey(category),
-                            systemImage: icon(for: category),
-                            color: color(for: category),
-                            isSelected: selectedCategories.contains(category)
-                        )
-                        .frame(maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                HStack {
+                    allCategoriesButton
+                    Spacer()
+                }
+
+                HStack(alignment: .top, spacing: AppSpacing.xl) {
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        categoryButton(.nostalgic)
+                        categoryButton(.family)
                     }
-                    .buttonStyle(.plain)
+
+                    Spacer()
+
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        categoryButton(.historical)
+                        categoryButton(.mysterious)
+                    }
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
         }
     }
 
-    private func toggleCategory(_ category: String) {
+    private var allCategoriesButton: some View {
+        Button {
+            toggleAllCategories()
+        } label: {
+            CategoryChip(
+                titleKey: "Alla",
+                systemImage: "square.grid.2x2",
+                color: AppColors.allCategories,
+                isSelected: areAllCategoriesSelected
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func categoryButton(_ category: MemoryCategory) -> some View {
+        Button {
+            toggleCategory(category)
+        } label: {
+            CategoryChip(
+                titleKey: LocalizedStringKey(category.displayNameKey),
+                systemImage: category.icon,
+                color: category.color,
+                isSelected: selectedCategories.contains(category)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func toggleCategory(_ category: MemoryCategory) {
         if selectedCategories.contains(category) {
             selectedCategories.remove(category)
         } else {
@@ -59,50 +90,26 @@ struct CategorySelectionView: View {
         }
     }
 
-    private func icon(for category: String) -> String {
-        switch category {
-        case "category_nostalgia":
-            return "clock.arrow.circlepath"
-        case "category_history":
-            return "book.closed.fill"
-        case "category_events":
-            return "sparkles"
-        case "category_calm":
-            return "moon.fill"
-        case "category_mystery":
-            return "eye.fill"
-        default:
-            return "circle.fill"
-        }
-    }
-
-    private func color(for category: String) -> Color {
-        switch category {
-        case "category_nostalgia":
-            return AppColors.nostalgia
-        case "category_history":
-            return AppColors.history
-        case "category_events":
-            return AppColors.echo
-        case "category_calm":
-            return AppColors.nature
-        case "category_mystery":
-            return AppColors.mystery
-        default:
-            return AppColors.primary
+    private func toggleAllCategories() {
+        if areAllCategoriesSelected {
+            selectedCategories.removeAll()
+        } else {
+            selectedCategories = Set(categories)
         }
     }
 }
 
 #Preview {
-    CategorySelectionView(
-        categories: [
-            "category_nostalgia",
-            "category_history",
-            "category_events",
-            "category_calm",
-            "category_mystery"
-        ],
-        selectedCategories: .constant(["category_nostalgia", "category_mystery"])
-    )
+    ZStack {
+        AppColors.background
+            .ignoresSafeArea()
+
+        StarBackgroundView()
+            .ignoresSafeArea()
+
+        CategorySelectionView(
+            categories: MemoryCategory.allCases,
+            selectedCategories: .constant([.nostalgic, .historical, .family, .mysterious])
+        )
+    }
 }

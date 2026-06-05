@@ -43,3 +43,9 @@
 "tab_record" = "Record";
 "tab_routes" = "Routes";
 "tab_profile" = "Profile";
+
+/* MemoryCategory.swift */
+"category_nostalgia" = "Nostalgia";
+"category_history" = "History";
+"category_family" = "Family";
+"category_mystery" = "Mystery";

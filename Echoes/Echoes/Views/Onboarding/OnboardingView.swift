@@ -2,7 +2,7 @@
 //  OnboardingView.swift
 //  Echoes
 //
-//  Updated by Sara Lindén on 2026-05-22.
+//  Updated by Sara Lindén on 2026-06-03.
 //
 
 import SwiftUI
@@ -11,7 +11,7 @@ struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("selectedCategories") private var selectedCategoriesStorage = ""
 
-    @State private var selectedCategories: Set<String> = []
+    @State private var selectedCategories: Set<MemoryCategory> = []
     @State private var currentStep = 0
     @State private var isRequestingPermissions = false
 
@@ -20,17 +20,14 @@ struct OnboardingView: View {
     private let photoStorageService = PhotoStorageService()
     private let notificationService = NotificationService()
 
-    private let categories = [
-        "category_nostalgia",
-        "category_history",
-        "category_events",
-        "category_calm",
-        "category_mystery"
-    ]
+    private let categories = MemoryCategory.allCases
 
     var body: some View {
         ZStack {
             AppColors.background
+                .ignoresSafeArea()
+
+            StarBackgroundView()
                 .ignoresSafeArea()
 
             VStack(spacing: AppSpacing.lg) {
@@ -141,7 +138,9 @@ struct OnboardingView: View {
     }
 
     private func saveSelectedCategories() {
-        selectedCategoriesStorage = selectedCategories.joined(separator: ",")
+        selectedCategoriesStorage = selectedCategories
+            .map { $0.rawValue }
+            .joined(separator: ",")
     }
 }
 
