@@ -3,7 +3,7 @@
 //  Echoes
 //
 //  Created by Sara Lindén on 2026-05-17.
-//  Updated by Sara Lindén on 2026-06-03.
+//  Updated by Sara Lindén on 2026-06-05.
 //
 
 import SwiftUI
@@ -23,29 +23,30 @@ struct SettingsView: View {
             StarBackgroundView()
                 .ignoresSafeArea()
 
-            VStack(spacing: AppSpacing.lg) {
-                Text("Inställningar")
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppColors.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, AppSpacing.lg)
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                    Text("Inställningar")
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                settingsContent
-
-                Spacer()
-
-                logoutButton
-
-                Spacer()
+                    preferencesSection
+                    accountSection
+                }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
+                .padding(.bottom, 110)
             }
-            .padding(.horizontal, AppSpacing.lg)
+            .scrollIndicators(.hidden)
         }
     }
 
-    // MARK: - Settings content
+    // MARK: - Preferences
 
-    private var settingsContent: some View {
-        VStack(spacing: AppSpacing.md) {
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            sectionTitle("PREFERENSER")
+
             notificationToggle
         }
     }
@@ -87,28 +88,61 @@ struct SettingsView: View {
         )
     }
 
-    // MARK: - Logout
+    // MARK: - Account
+
+    private var accountSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            sectionTitle("KONTO")
+
+            logoutButton
+        }
+    }
 
     private var logoutButton: some View {
         Button(role: .destructive) {
             auth.logout()
         } label: {
-            HStack {
-                Image(systemName: "rectangle.portrait.and.arrow.right")
+            HStack(spacing: AppSpacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.people.opacity(0.14))
+                        .frame(width: 38, height: 38)
 
-                Text("Logga ut")
-                    .font(AppTypography.headline)
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppColors.people)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Logga ut")
+                        .font(AppTypography.headline)
+                        .foregroundStyle(AppColors.people)
+
+                    Text("Avsluta din session på den här enheten")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+
+                Spacer()
             }
-            .foregroundStyle(AppColors.people)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(AppColors.people.opacity(0.12))
+            .padding(AppSpacing.md)
+            .background(AppColors.people.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(AppColors.people.opacity(0.35), lineWidth: 1)
+                    .stroke(AppColors.people.opacity(0.28), lineWidth: 1)
             )
         }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Helpers
+
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(AppTypography.smallCaps)
+            .foregroundStyle(AppColors.textMuted)
+            .tracking(1.4)
     }
 }
 
