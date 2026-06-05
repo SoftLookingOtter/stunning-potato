@@ -14,6 +14,7 @@ struct RecordView: View {
     
     @State private var viewModel = RecordViewModel()
     @State private var selectedCategory: MemoryCategory = .nostalgic
+    @State private var ShowConfirmation = false
     
     @State private var title = ""
     @State private var story = ""
@@ -57,15 +58,22 @@ struct RecordView: View {
                         latitude: 0,
                         longitude: 0
                     ) != nil {
-                        
-                        print("Echo Sparad")
-                        
-                    } else {
-                        print("Ingen echo sparades")
+                        // Reset form
+                        title = ""
+                        story = ""
+                        selectedCategory = .nostalgic
+                        // Dismiss Keyboard
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil, from: nil, for: nil)
+                        ShowConfirmation = true
                     }
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
+        }
+        .alert("Minne sparat!", isPresented: $ShowConfirmation) {
+            Button("OK", role: .cancel) { }
         }
     }
 }
