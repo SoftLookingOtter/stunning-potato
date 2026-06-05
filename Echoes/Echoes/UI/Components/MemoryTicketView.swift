@@ -11,15 +11,21 @@ struct MemoryTicketView: View {
     let title: String
     let date: String
     let category: String
-    let location: String?
     let imageName: String?
     let onPlay: () -> Void
-
+    
     var body: some View {
-        ticketContent(scale: 1)
-            .aspectRatio(1.72, contentMode: .fit)
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            let height = width / 2.45
+            let scale = min(max(width / 380, 0.68), 1.0)
+            
+            ticketContent(scale: scale)
+                .frame(width: width, height: height)
+        }
+        .aspectRatio(2.45, contentMode: .fit)
     }
-
+    
     private func ticketContent(scale: CGFloat) -> some View {
         let ticketShape = TicketShape(
             cornerRadius: 12 * scale,
@@ -30,12 +36,12 @@ struct MemoryTicketView: View {
             smallNotchCountAbove: 2,
             smallNotchCountBelow: 10
         )
-
+        
         return HStack(spacing: 0) {
             mainTicketContent(scale: scale)
-
+            
             perforationLine(scale: scale)
-
+            
             admitOneStrip(scale: scale)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -50,32 +56,36 @@ struct MemoryTicketView: View {
             y: 8
         )
     }
-
+    
     // MARK: - Main content
-
+    
     private func mainTicketContent(scale: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 8 * scale) {
-            ticketHeader(scale: scale)
-
-            HStack(alignment: .top, spacing: 14 * scale) {
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 0) {
+                ticketHeader(scale: scale)
+                    .padding(.bottom, 8 * scale)
+                
                 ticketInfoSection(scale: scale)
-
-                Spacer(minLength: 8 * scale)
-
-                imagePlaceholder(scale: scale)
+                    .frame(width: 138 * scale, alignment: .leading)
+                
+                Spacer(minLength: 10 * scale)
+                
+                ticketFooter(scale: scale)
+                    .padding(.bottom, 0)
             }
-
-            Spacer(minLength: 6 * scale)
-
-            ticketFooter(scale: scale)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            
+            imagePlaceholder(scale: scale)
+                .padding(.top, 0)
+                .padding(.trailing, 5)
         }
-        .padding(.leading, 26 * scale)
-        .padding(.trailing, 18 * scale)
-        .padding(.top, 24 * scale)
-        .padding(.bottom, 20 * scale)
+        .padding(.leading, 34 * scale)
+        .padding(.trailing, 1 * scale)
+        .padding(.top, 34 * scale)
+        .padding(.bottom, 34 * scale)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
+    
     private func ticketHeader(scale: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("ECHO")
@@ -83,7 +93,7 @@ struct MemoryTicketView: View {
                 .foregroundStyle(AppColors.background)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-
+            
             Text("MEMORY TICKET")
                 .font(.system(size: 9 * scale, weight: .semibold, design: .serif))
                 .tracking(1.8 * scale)
@@ -91,20 +101,16 @@ struct MemoryTicketView: View {
                 .lineLimit(1)
         }
     }
-
+    
     private func ticketInfoSection(scale: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 5 * scale) {
+        VStack(alignment: .leading, spacing: 6 * scale) {
             ticketInfo(label: "TITLE", value: title, scale: scale)
             ticketInfo(label: "DATE", value: date, scale: scale)
             ticketInfo(label: "CATEGORY", value: category, scale: scale)
-
-            if let location {
-                ticketInfo(label: "LOCATION", value: location, scale: scale)
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-
+    
     private func ticketInfo(label: String, value: String, scale: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 2 * scale) {
             Text(label)
@@ -112,57 +118,58 @@ struct MemoryTicketView: View {
                 .tracking(1.2 * scale)
                 .foregroundStyle(AppColors.background.opacity(0.55))
                 .lineLimit(1)
-
+            
             Text(value)
                 .font(.system(size: 13 * scale, weight: .semibold, design: .serif))
                 .foregroundStyle(AppColors.background.opacity(0.88))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
-
+            
             Rectangle()
                 .fill(AppColors.background.opacity(0.18))
-                .frame(height: 1)
+                .frame(width: 105 * scale, height: 1)
                 .padding(.top, 2 * scale)
         }
     }
-
+    
     // MARK: - Image
-
+    
     private func imagePlaceholder(scale: CGFloat) -> some View {
         ZStack {
-            Rectangle()
-                .fill(AppColors.background.opacity(0.18))
-
+            RoundedRectangle(cornerRadius: 4 * scale)
+                .fill(AppColors.background.opacity(0.16))
+            
             if let imageName {
                 Image(imageName)
                     .resizable()
                     .scaledToFill()
             } else {
                 Image(systemName: "photo")
-                    .font(.system(size: 24 * scale, weight: .medium))
+                    .font(.system(size: 33 * scale, weight: .medium))
                     .foregroundStyle(AppColors.background.opacity(0.45))
             }
         }
-        .frame(width: 112 * scale, height: 82 * scale)
-        .clipShape(RoundedRectangle(cornerRadius: 7 * scale))
+        .frame(width: 145 * scale, height: 145 * scale)
+        .clipShape(RoundedRectangle(cornerRadius: 4 * scale))
         .overlay {
-            RoundedRectangle(cornerRadius: 7 * scale)
-                .stroke(AppColors.background.opacity(0.24), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 4 * scale)
+                .stroke(AppColors.background.opacity(0.34), lineWidth: 1)
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 3 * scale)
-                .stroke(AppColors.background.opacity(0.16), lineWidth: 1)
-                .padding(4 * scale)
+            RoundedRectangle(cornerRadius: 2 * scale)
+                .stroke(AppColors.background.opacity(0.18), lineWidth: 1)
+                .padding(5 * scale)
         }
         .clipped()
     }
-
+    
     // MARK: - Footer
-
+    
     private func ticketFooter(scale: CGFloat) -> some View {
         HStack(spacing: 12 * scale) {
             waveform(scale: scale)
-
+                .padding(.trailing, 8 * scale)
+            
             Button(action: onPlay) {
                 Image(systemName: "play.fill")
                     .font(.system(size: 13 * scale, weight: .bold))
@@ -176,35 +183,47 @@ struct MemoryTicketView: View {
                     }
             }
             .buttonStyle(.plain)
-            .padding(.trailing, 10 * scale)
-        }
-    }
-
-    private func waveform(scale: CGFloat) -> some View {
-        HStack(spacing: 3 * scale) {
-            ForEach(0..<34, id: \.self) { index in
-                Capsule()
-                    .fill(AppColors.background.opacity(0.65))
-                    .frame(
-                        width: max(1.5, 2 * scale),
-                        height: waveformHeight(for: index) * scale
-                    )
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.trailing, 14 * scale)
     }
-
+    
+    private func waveform(scale: CGFloat) -> some View {
+        GeometryReader { proxy in
+            let barCount = 46
+            let spacing = 3 * scale
+            let availableWidth = proxy.size.width
+            let barWidth = max(
+                1.5,
+                (availableWidth - CGFloat(barCount - 1) * spacing) / CGFloat(barCount)
+            )
+            
+            HStack(spacing: spacing) {
+                ForEach(0..<barCount, id: \.self) { index in
+                    Capsule()
+                        .fill(AppColors.background.opacity(0.65))
+                        .frame(
+                            width: barWidth,
+                            height: waveformHeight(for: index) * scale
+                        )
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        }
+        .frame(height: 32 * scale)
+    }
+    
     private func waveformHeight(for index: Int) -> CGFloat {
         let values: [CGFloat] = [
             8, 13, 18, 10, 22, 15, 9, 19, 25,
             14, 11, 20, 16, 12, 23, 17, 9
         ]
-
+        
         return values[index % values.count]
     }
-
+    
     // MARK: - Admit one strip
-
+    
     private func admitOneStrip(scale: CGFloat) -> some View {
         ZStack {
             Text("ADMIT ONE")
@@ -215,12 +234,12 @@ struct MemoryTicketView: View {
                 .frame(width: 124 * scale, height: 30 * scale)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+                .offset(x: -11 * scale)
         }
         .frame(width: 64 * scale)
         .frame(maxHeight: .infinity)
-        .padding(.trailing, 6 * scale)
     }
-
+    
     private func perforationLine(scale: CGFloat) -> some View {
         DashedVerticalLine()
             .stroke(
@@ -233,9 +252,9 @@ struct MemoryTicketView: View {
             .frame(width: 1)
             .padding(.vertical, 26 * scale)
     }
-
+    
     // MARK: - Border
-
+    
     private func ticketInnerBorder(scale: CGFloat) -> some View {
         ZStack {
             TicketInsetBorder(
@@ -243,7 +262,7 @@ struct MemoryTicketView: View {
                 cornerRadius: 12 * scale
             )
             .stroke(AppColors.background.opacity(0.26), lineWidth: 1)
-
+            
             TicketInsetBorder(
                 inset: 22 * scale,
                 cornerRadius: 10 * scale
@@ -252,68 +271,84 @@ struct MemoryTicketView: View {
         }
         .allowsHitTesting(false)
     }
-
+    
     // MARK: - Background
-
+    
     private var ticketBackground: some View {
-        ticketPaper
-            .overlay(
-                LinearGradient(
-                    colors: [
-                        .white.opacity(0.18),
-                        .black.opacity(0.08)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+        ZStack {
+            parchmentBase
+            
+            categoryAccentColor(for: category)
+                .opacity(0.22)
+        }
+        .overlay(
+            LinearGradient(
+                colors: [
+                    .white.opacity(0.14),
+                    .black.opacity(0.10)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
-            .overlay(
-                LinearGradient(
-                    colors: [
-                        .black.opacity(0.10),
-                        .clear,
-                        .black.opacity(0.10)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+        )
+        .overlay(
+            LinearGradient(
+                colors: [
+                    .black.opacity(0.20),
+                    .clear,
+                    .black.opacity(0.18)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
             )
-            .overlay(ticketTexture)
+        )
+        .overlay(ticketTexture)
+        .overlay(ticketDirtTexture)
     }
-
+    
     private var ticketPaper: Color {
-        ticketPaperColor(for: category)
+        parchmentBase
     }
-
-    private func ticketPaperColor(for category: String) -> Color {
+    
+    private var parchmentBase: Color {
+        Color(red: 0.72, green: 0.58, blue: 0.36)
+    }
+    
+    private func categoryAccentColor(for category: String) -> Color {
         let normalizedCategory = category
             .lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         switch normalizedCategory {
-        case "familjeminnen", "family", "family memories":
-            return Color(red: 0.78, green: 0.64, blue: 0.42)
-
         case "nostalgi", "nostalgia":
-            return Color(red: 0.55, green: 0.58, blue: 0.39)
-
+            return AppColors.nostalgia
+            
         case "mystik", "mystery":
-            return Color(red: 0.50, green: 0.38, blue: 0.42)
-
+            return AppColors.mystery
+            
         case "historia", "history":
-            return Color(red: 0.52, green: 0.45, blue: 0.34)
-
+            return AppColors.history
+            
+        case "natur", "nature":
+            return AppColors.nature
+            
+        case "familjeminnen", "family", "family memories", "people", "personer":
+            return AppColors.people
+            
+        case "alla", "all", "all categories":
+            return AppColors.allCategories
+            
         case "events", "event", "händelser":
-            return Color(red: 0.45, green: 0.50, blue: 0.58)
-
+            return AppColors.echo
+            
         case "calm", "lugn":
-            return Color(red: 0.48, green: 0.58, blue: 0.54)
-
+            return AppColors.nature
+            
         default:
-            return Color(red: 0.78, green: 0.64, blue: 0.42)
+            return AppColors.primary
         }
     }
-
+    
     private var ticketTexture: some View {
         GeometryReader { proxy in
             ForEach(0..<34, id: \.self) { index in
@@ -329,283 +364,450 @@ struct MemoryTicketView: View {
                     )
             }
         }
+        .allowsHitTesting(false)
     }
-}
+    
+    private var ticketDirtTexture: some View {
+        GeometryReader { proxy in
+            let seed = stableSeed
 
-// MARK: - Ticket shape
+            ZStack {
+                // Dark stains
+                ForEach(0..<24, id: \.self) { index in
+                    let randomX = seededRandom(index: index, seed: seed)
+                    let randomY = seededRandom(index: index + 100, seed: seed)
 
-struct TicketShape: Shape {
-    var cornerRadius: CGFloat = 12
-    var bigNotchRadius: CGFloat = 13
-    var bigNotchYOffset: CGFloat = 0.25
-
-    var smallNotchRadius: CGFloat = 1.6
-    var smallNotchDepth: CGFloat = 1.4
-
-    var smallNotchCountAbove: Int = 2
-    var smallNotchCountBelow: Int = 10
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        let minX = rect.minX
-        let maxX = rect.maxX
-        let minY = rect.minY
-        let maxY = rect.maxY
-        let bigCenterY = minY + rect.height * bigNotchYOffset
-
-        path.move(to: CGPoint(x: minX + cornerRadius, y: minY))
-
-        path.addLine(to: CGPoint(x: maxX - cornerRadius, y: minY))
-
-        path.addArc(
-            center: CGPoint(x: maxX, y: minY),
-            radius: cornerRadius,
-            startAngle: .degrees(180),
-            endAngle: .degrees(90),
-            clockwise: true
-        )
-
-        addRightNotchedEdge(
-            path: &path,
-            x: maxX,
-            fromY: minY + cornerRadius,
-            toY: bigCenterY - bigNotchRadius,
-            count: smallNotchCountAbove
-        )
-
-        path.addArc(
-            center: CGPoint(x: maxX, y: bigCenterY),
-            radius: bigNotchRadius,
-            startAngle: .degrees(-90),
-            endAngle: .degrees(90),
-            clockwise: true
-        )
-
-        addRightNotchedEdge(
-            path: &path,
-            x: maxX,
-            fromY: bigCenterY + bigNotchRadius,
-            toY: maxY - cornerRadius,
-            count: smallNotchCountBelow
-        )
-
-        path.addArc(
-            center: CGPoint(x: maxX, y: maxY),
-            radius: cornerRadius,
-            startAngle: .degrees(270),
-            endAngle: .degrees(180),
-            clockwise: true
-        )
-
-        path.addLine(to: CGPoint(x: minX + cornerRadius, y: maxY))
-
-        path.addArc(
-            center: CGPoint(x: minX, y: maxY),
-            radius: cornerRadius,
-            startAngle: .degrees(0),
-            endAngle: .degrees(270),
-            clockwise: true
-        )
-
-        addLeftNotchedEdge(
-            path: &path,
-            x: minX,
-            fromY: maxY - cornerRadius,
-            toY: bigCenterY + bigNotchRadius,
-            count: smallNotchCountBelow
-        )
-
-        path.addArc(
-            center: CGPoint(x: minX, y: bigCenterY),
-            radius: bigNotchRadius,
-            startAngle: .degrees(90),
-            endAngle: .degrees(-90),
-            clockwise: true
-        )
-
-        addLeftNotchedEdge(
-            path: &path,
-            x: minX,
-            fromY: bigCenterY - bigNotchRadius,
-            toY: minY + cornerRadius,
-            count: smallNotchCountAbove
-        )
-
-        path.addArc(
-            center: CGPoint(x: minX, y: minY),
-            radius: cornerRadius,
-            startAngle: .degrees(90),
-            endAngle: .degrees(0),
-            clockwise: true
-        )
-
-        path.closeSubpath()
-        return path
-    }
-
-    private func addRightNotchedEdge(
-        path: inout Path,
-        x: CGFloat,
-        fromY: CGFloat,
-        toY: CGFloat,
-        count: Int
-    ) {
-        guard count > 0, toY > fromY else {
-            path.addLine(to: CGPoint(x: x, y: toY))
-            return
-        }
-
-        let spacing = (toY - fromY) / CGFloat(count + 1)
-
-        for index in 1...count {
-            let centerY = fromY + CGFloat(index) * spacing
-
-            path.addLine(to: CGPoint(x: x, y: centerY - smallNotchRadius))
-            path.addQuadCurve(
-                to: CGPoint(x: x, y: centerY + smallNotchRadius),
-                control: CGPoint(x: x - smallNotchDepth, y: centerY)
-            )
-        }
-
-        path.addLine(to: CGPoint(x: x, y: toY))
-    }
-
-    private func addLeftNotchedEdge(
-        path: inout Path,
-        x: CGFloat,
-        fromY: CGFloat,
-        toY: CGFloat,
-        count: Int
-    ) {
-        guard count > 0, fromY > toY else {
-            path.addLine(to: CGPoint(x: x, y: toY))
-            return
-        }
-
-        let spacing = (fromY - toY) / CGFloat(count + 1)
-
-        for index in 1...count {
-            let centerY = fromY - CGFloat(index) * spacing
-
-            path.addLine(to: CGPoint(x: x, y: centerY + smallNotchRadius))
-            path.addQuadCurve(
-                to: CGPoint(x: x, y: centerY - smallNotchRadius),
-                control: CGPoint(x: x + smallNotchDepth, y: centerY)
-            )
-        }
-
-        path.addLine(to: CGPoint(x: x, y: toY))
-    }
-}
-
-// MARK: - Decorative shapes
-
-struct DashedVerticalLine: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
-        return path
-    }
-}
-
-struct TicketInsetBorder: Shape {
-    var inset: CGFloat = 12
-    var cornerRadius: CGFloat = 12
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        let insetRect = rect.insetBy(dx: inset, dy: inset)
-
-        let minX = insetRect.minX
-        let maxX = insetRect.maxX
-        let minY = insetRect.minY
-        let maxY = insetRect.maxY
-
-        let radius = min(
-            cornerRadius,
-            insetRect.width * 0.12,
-            insetRect.height * 0.24
-        )
-
-        path.move(to: CGPoint(x: minX + radius, y: minY))
-
-        path.addLine(to: CGPoint(x: maxX - radius, y: minY))
-
-        path.addArc(
-            center: CGPoint(x: maxX, y: minY),
-            radius: radius,
-            startAngle: .degrees(180),
-            endAngle: .degrees(90),
-            clockwise: true
-        )
-
-        path.addLine(to: CGPoint(x: maxX, y: maxY - radius))
-
-        path.addArc(
-            center: CGPoint(x: maxX, y: maxY),
-            radius: radius,
-            startAngle: .degrees(270),
-            endAngle: .degrees(180),
-            clockwise: true
-        )
-
-        path.addLine(to: CGPoint(x: minX + radius, y: maxY))
-
-        path.addArc(
-            center: CGPoint(x: minX, y: maxY),
-            radius: radius,
-            startAngle: .degrees(0),
-            endAngle: .degrees(270),
-            clockwise: true
-        )
-
-        path.addLine(to: CGPoint(x: minX, y: minY + radius))
-
-        path.addArc(
-            center: CGPoint(x: minX, y: minY),
-            radius: radius,
-            startAngle: .degrees(90),
-            endAngle: .degrees(0),
-            clockwise: true
-        )
-
-        path.closeSubpath()
-        return path
-    }
-}
-
-#Preview {
-    ZStack {
-        AppColors.background
-            .ignoresSafeArea()
-
-        ScrollView {
-            VStack(spacing: 24) {
-                MemoryTicketView(
-                    title: "Mormors trädgård",
-                    date: "12 maj 1978",
-                    category: "Familjeminnen",
-                    location: "Gamla stan",
-                    imageName: nil
-                ) {
-                    print("Play tapped")
+                    Ellipse()
+                        .fill(AppColors.background.opacity(dirtOpacity(for: index, seed: seed)))
+                        .frame(
+                            width: randomSize(
+                                index: index,
+                                seed: seed,
+                                min: 8,
+                                max: 18
+                            ),
+                            height: randomSize(
+                                index: index + 31,
+                                seed: seed,
+                                min: 4,
+                                max: 10
+                            )
+                        )
+                        .rotationEffect(.degrees(randomDegrees(index: index, seed: seed)))
+                        .position(
+                            x: proxy.size.width * randomX,
+                            y: proxy.size.height * randomY
+                        )
                 }
 
-                MemoryTicketView(
-                    title: "Gamla cykelverkstaden",
-                    date: "3 juni 1952",
-                    category: "Nostalgi",
-                    location: "Cykelverkstaden",
-                    imageName: nil
-                ) {
-                    print("Play tapped")
+                // Light worn paper marks
+                ForEach(0..<14, id: \.self) { index in
+                    Ellipse()
+                        .fill(.white.opacity(lightWearOpacity(for: index, seed: seed)))
+                        .frame(
+                            width: randomSize(
+                                index: index + 200,
+                                seed: seed,
+                                min: 10,
+                                max: 22
+                            ),
+                            height: randomSize(
+                                index: index + 240,
+                                seed: seed,
+                                min: 3,
+                                max: 8
+                            )
+                        )
+                        .rotationEffect(.degrees(randomDegrees(index: index + 300, seed: seed)))
+                        .position(
+                            x: proxy.size.width * seededRandom(index: index + 400, seed: seed),
+                            y: proxy.size.height * seededRandom(index: index + 500, seed: seed)
+                        )
+                }
+
+                // Scratches and paper fibers
+                ForEach(0..<18, id: \.self) { index in
+                    Rectangle()
+                        .fill(AppColors.background.opacity(0.055))
+                        .frame(
+                            width: randomSize(
+                                index: index + 600,
+                                seed: seed,
+                                min: 24,
+                                max: 42
+                            ),
+                            height: 1
+                        )
+                        .rotationEffect(
+                            .degrees(
+                                randomDegrees(
+                                    index: index + 700,
+                                    seed: seed,
+                                    range: 28
+                                ) - 14
+                            )
+                        )
+                        .position(
+                            x: proxy.size.width * seededRandom(index: index + 800, seed: seed),
+                            y: proxy.size.height * seededRandom(index: index + 900, seed: seed)
+                        )
+                }
+
+                // Dark uneven edge shading
+                RadialGradient(
+                    colors: [
+                        .clear,
+                        AppColors.background.opacity(0.16)
+                    ],
+                    center: .center,
+                    startRadius: proxy.size.width * 0.10,
+                    endRadius: proxy.size.width * 0.70
+                )
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    // Creates a stable seed so each ticket gets its own dirt pattern,
+    // but the pattern does not change every time SwiftUI redraws the view.
+    private var stableSeed: Int {
+        var hasher = Hasher()
+        hasher.combine(title)
+        hasher.combine(date)
+        hasher.combine(category)
+        return abs(hasher.finalize())
+    }
+
+    // Returns a deterministic pseudo-random value between 0 and 1.
+    private func seededRandom(index: Int, seed: Int) -> CGFloat {
+        let value = sin(Double(index * 12_989 + seed) * 78.233) * 43_758.5453
+        let fraction = value - floor(value)
+        return CGFloat(fraction)
+    }
+
+    // Returns a deterministic pseudo-random size between the given min and max.
+    private func randomSize(
+        index: Int,
+        seed: Int,
+        min: CGFloat,
+        max: CGFloat
+    ) -> CGFloat {
+        min + seededRandom(index: index, seed: seed) * (max - min)
+    }
+
+    // Returns a deterministic pseudo-random rotation angle.
+    private func randomDegrees(
+        index: Int,
+        seed: Int,
+        range: Double = 180
+    ) -> Double {
+        Double(seededRandom(index: index, seed: seed)) * range
+    }
+
+    // Returns a slightly varied opacity for dark stains.
+    private func dirtOpacity(for index: Int, seed: Int) -> Double {
+        let baseValues: [Double] = [
+            0.060, 0.085, 0.045, 0.075, 0.110,
+            0.050, 0.080, 0.065, 0.095, 0.045
+        ]
+
+        let base = baseValues[index % baseValues.count]
+        let variation = Double(seededRandom(index: index + 1000, seed: seed)) * 0.025
+
+        return base + variation
+    }
+
+    // Returns a slightly varied opacity for lighter worn paper marks.
+    private func lightWearOpacity(for index: Int, seed: Int) -> Double {
+        let baseValues: [Double] = [
+            0.035, 0.050, 0.025, 0.040, 0.060,
+            0.030, 0.045, 0.035
+        ]
+
+        let base = baseValues[index % baseValues.count]
+        let variation = Double(seededRandom(index: index + 1200, seed: seed)) * 0.020
+
+        return base + variation
+    }
+    
+    // MARK: - Ticket shape
+    
+    struct TicketShape: Shape {
+        var cornerRadius: CGFloat = 12
+        var bigNotchRadius: CGFloat = 13
+        var bigNotchYOffset: CGFloat = 0.25
+        
+        var smallNotchRadius: CGFloat = 1.6
+        var smallNotchDepth: CGFloat = 1.4
+        
+        var smallNotchCountAbove: Int = 2
+        var smallNotchCountBelow: Int = 10
+        
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            
+            let minX = rect.minX
+            let maxX = rect.maxX
+            let minY = rect.minY
+            let maxY = rect.maxY
+            let bigCenterY = minY + rect.height * bigNotchYOffset
+            
+            path.move(to: CGPoint(x: minX + cornerRadius, y: minY))
+            
+            path.addLine(to: CGPoint(x: maxX - cornerRadius, y: minY))
+            
+            path.addArc(
+                center: CGPoint(x: maxX, y: minY),
+                radius: cornerRadius,
+                startAngle: .degrees(180),
+                endAngle: .degrees(90),
+                clockwise: true
+            )
+            
+            addRightNotchedEdge(
+                path: &path,
+                x: maxX,
+                fromY: minY + cornerRadius,
+                toY: bigCenterY - bigNotchRadius,
+                count: smallNotchCountAbove
+            )
+            
+            path.addArc(
+                center: CGPoint(x: maxX, y: bigCenterY),
+                radius: bigNotchRadius,
+                startAngle: .degrees(-90),
+                endAngle: .degrees(90),
+                clockwise: true
+            )
+            
+            addRightNotchedEdge(
+                path: &path,
+                x: maxX,
+                fromY: bigCenterY + bigNotchRadius,
+                toY: maxY - cornerRadius,
+                count: smallNotchCountBelow
+            )
+            
+            path.addArc(
+                center: CGPoint(x: maxX, y: maxY),
+                radius: cornerRadius,
+                startAngle: .degrees(270),
+                endAngle: .degrees(180),
+                clockwise: true
+            )
+            
+            path.addLine(to: CGPoint(x: minX + cornerRadius, y: maxY))
+            
+            path.addArc(
+                center: CGPoint(x: minX, y: maxY),
+                radius: cornerRadius,
+                startAngle: .degrees(0),
+                endAngle: .degrees(270),
+                clockwise: true
+            )
+            
+            addLeftNotchedEdge(
+                path: &path,
+                x: minX,
+                fromY: maxY - cornerRadius,
+                toY: bigCenterY + bigNotchRadius,
+                count: smallNotchCountBelow
+            )
+            
+            path.addArc(
+                center: CGPoint(x: minX, y: bigCenterY),
+                radius: bigNotchRadius,
+                startAngle: .degrees(90),
+                endAngle: .degrees(-90),
+                clockwise: true
+            )
+            
+            addLeftNotchedEdge(
+                path: &path,
+                x: minX,
+                fromY: bigCenterY - bigNotchRadius,
+                toY: minY + cornerRadius,
+                count: smallNotchCountAbove
+            )
+            
+            path.addArc(
+                center: CGPoint(x: minX, y: minY),
+                radius: cornerRadius,
+                startAngle: .degrees(90),
+                endAngle: .degrees(0),
+                clockwise: true
+            )
+            
+            path.closeSubpath()
+            return path
+        }
+        
+        private func addRightNotchedEdge(
+            path: inout Path,
+            x: CGFloat,
+            fromY: CGFloat,
+            toY: CGFloat,
+            count: Int
+        ) {
+            guard count > 0, toY > fromY else {
+                path.addLine(to: CGPoint(x: x, y: toY))
+                return
+            }
+            
+            let spacing = (toY - fromY) / CGFloat(count + 1)
+            
+            for index in 1...count {
+                let centerY = fromY + CGFloat(index) * spacing
+                
+                path.addLine(to: CGPoint(x: x, y: centerY - smallNotchRadius))
+                path.addQuadCurve(
+                    to: CGPoint(x: x, y: centerY + smallNotchRadius),
+                    control: CGPoint(x: x - smallNotchDepth, y: centerY)
+                )
+            }
+            
+            path.addLine(to: CGPoint(x: x, y: toY))
+        }
+        
+        private func addLeftNotchedEdge(
+            path: inout Path,
+            x: CGFloat,
+            fromY: CGFloat,
+            toY: CGFloat,
+            count: Int
+        ) {
+            guard count > 0, fromY > toY else {
+                path.addLine(to: CGPoint(x: x, y: toY))
+                return
+            }
+            
+            let spacing = (fromY - toY) / CGFloat(count + 1)
+            
+            for index in 1...count {
+                let centerY = fromY - CGFloat(index) * spacing
+                
+                path.addLine(to: CGPoint(x: x, y: centerY + smallNotchRadius))
+                path.addQuadCurve(
+                    to: CGPoint(x: x, y: centerY - smallNotchRadius),
+                    control: CGPoint(x: x + smallNotchDepth, y: centerY)
+                )
+            }
+            
+            path.addLine(to: CGPoint(x: x, y: toY))
+        }
+    }
+    
+    // MARK: - Decorative shapes
+    
+    struct DashedVerticalLine: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            return path
+        }
+    }
+    
+    struct TicketInsetBorder: Shape {
+        var inset: CGFloat = 12
+        var cornerRadius: CGFloat = 12
+        
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            
+            let insetRect = rect.insetBy(dx: inset, dy: inset)
+            
+            let minX = insetRect.minX
+            let maxX = insetRect.maxX
+            let minY = insetRect.minY
+            let maxY = insetRect.maxY
+            
+            let radius = min(
+                cornerRadius,
+                insetRect.width * 0.12,
+                insetRect.height * 0.24
+            )
+            
+            path.move(to: CGPoint(x: minX + radius, y: minY))
+            
+            path.addLine(to: CGPoint(x: maxX - radius, y: minY))
+            
+            path.addArc(
+                center: CGPoint(x: maxX, y: minY),
+                radius: radius,
+                startAngle: .degrees(180),
+                endAngle: .degrees(90),
+                clockwise: true
+            )
+            
+            path.addLine(to: CGPoint(x: maxX, y: maxY - radius))
+            
+            path.addArc(
+                center: CGPoint(x: maxX, y: maxY),
+                radius: radius,
+                startAngle: .degrees(270),
+                endAngle: .degrees(180),
+                clockwise: true
+            )
+            
+            path.addLine(to: CGPoint(x: minX + radius, y: maxY))
+            
+            path.addArc(
+                center: CGPoint(x: minX, y: maxY),
+                radius: radius,
+                startAngle: .degrees(0),
+                endAngle: .degrees(270),
+                clockwise: true
+            )
+            
+            path.addLine(to: CGPoint(x: minX, y: minY + radius))
+            
+            path.addArc(
+                center: CGPoint(x: minX, y: minY),
+                radius: radius,
+                startAngle: .degrees(90),
+                endAngle: .degrees(0),
+                clockwise: true
+            )
+            
+            path.closeSubpath()
+            return path
+        }
+    }
+}
+    
+    #Preview {
+        ZStack {
+            AppColors.background
+                .ignoresSafeArea()
+            
+            GeometryReader { proxy in
+                ScrollView {
+                    VStack(spacing: 110) {
+                        MemoryTicketView(
+                            title: "Mormors trädgård",
+                            date: "12 maj 1978",
+                            category: "Familjeminnen",
+                            imageName: nil
+                        ) {
+                            print("Play tapped")
+                        }
+                        .frame(width: proxy.size.width - 32)
+                        
+                        MemoryTicketView(
+                            title: "Gamla cykelverkstaden",
+                            date: "3 juni 1952",
+                            category: "Nostalgi",
+                            imageName: nil
+                        ) {
+                            print("Play tapped")
+                        }
+                        .frame(width: proxy.size.width - 32)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 100)
                 }
             }
-            .padding(.horizontal, AppSpacing.xl)
-            .padding(.vertical, AppSpacing.xl)
         }
     }
-}
+
