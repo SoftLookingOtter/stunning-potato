@@ -14,6 +14,8 @@ import Observation
 @Observable
 final class HomeViewModel {
 
+    @ObservationIgnored private let audioService = AudioService()
+
     // MARK: - Filter state
 
     /// Persisted to UserDefaults so the chosen category survives app restarts.
@@ -104,6 +106,13 @@ final class HomeViewModel {
     }
 
     func play(_ echo: EchoMemory, auth: AuthViewModel, in context: ModelContext) {
+        if let path = echo.audioFilePath {
+            let url = URL(fileURLWithPath: path)
+            audioService.playRecording(url: url)
+            print("▶️ Spelar upp: \(path)")
+        }else{
+            print("❌ Ingen ljudfil hittades")
+        }
         echo.plays += 1
         auth.incrementPlays(context: context)
         try? context.save()
