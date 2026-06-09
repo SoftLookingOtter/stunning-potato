@@ -29,7 +29,7 @@ struct RouteListView: View {
                     .ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                    Text("Rutter")
+                    Text("Sparade Echon")
                         .font(AppTypography.title)
                         .foregroundStyle(AppColors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -126,7 +126,7 @@ struct RouteListView: View {
 
     private var emptyState: some View {
         VStack(spacing: AppSpacing.md) {
-            Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
+            Image(uiImage: .echoTabIcon(size: 42))
                 .font(.system(size: 42, weight: .semibold))
                 .foregroundStyle(AppColors.primary.opacity(0.7))
 
