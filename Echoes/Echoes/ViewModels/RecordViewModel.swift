@@ -47,8 +47,8 @@ final class RecordViewModel {
         isRecording = false
     }
 
-    /// Persists the latest recording as an EchoMemory in the given context.
-    /// Returns nil if required data is missing.
+    // Persists the latest recording as an EchoMemory in the given context.
+    // Returns nil if required data is missing.
     @discardableResult
     func saveEcho(
         in context: ModelContext,
@@ -56,7 +56,8 @@ final class RecordViewModel {
         story: String,
         category: MemoryCategory,
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        imageName: String?
     ) -> EchoMemory? {
         errorMessage = ""
 
@@ -78,6 +79,11 @@ final class RecordViewModel {
             return nil
         }
 
+        guard let imageName else {
+            errorMessage = "Du behöver lägga till en bild."
+            return nil
+        }
+
         let echo = EchoMemory(
             recordingAt: url,
             title: trimmedTitle,
@@ -87,6 +93,7 @@ final class RecordViewModel {
             longitude: longitude
         )
 
+        echo.imageName = imageName
         echo.discoveredAt = Date()
 
         context.insert(echo)
@@ -101,11 +108,19 @@ final class RecordViewModel {
         }
     }
 
+    // Discards an unsaved recording and deletes the temporary audio file.
     func discardRecording() {
         if let recordedAudioURL {
             try? FileManager.default.removeItem(at: recordedAudioURL)
         }
 
+        recordedAudioURL = nil
+        errorMessage = ""
+    }
+
+    // Clears the current recording reference after saving.
+    // This does not delete the saved audio file.
+    func clearRecordingAfterSave() {
         recordedAudioURL = nil
         errorMessage = ""
     }

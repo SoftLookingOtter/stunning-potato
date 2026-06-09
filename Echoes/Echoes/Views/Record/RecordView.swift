@@ -4,11 +4,13 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Updated by Mikael Engvall on 2026-05-29.
-//  Updated by Sara Lindén on 2026-06-05.
+//  Updated by Sara Lindén on 2026-06-06.
 //
 
 import SwiftUI
 import SwiftData
+import PhotosUI
+import UIKit
 
 struct RecordView: View {
 
@@ -21,6 +23,15 @@ struct RecordView: View {
     @State private var story = ""
     @State private var hasApprovedRecording = false
 
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedImageData: Data?
+    @State private var isLoadingImage = false
+    @State private var imageErrorMessage = ""
+
+    @State private var savedEcho: EchoMemory?
+
+    private let photoStorageService = PhotoStorageService()
+
     var body: some View {
         ZStack {
             AppColors.background
@@ -31,81 +42,123 @@ struct RecordView: View {
 
             ScrollView {
                 VStack(spacing: AppSpacing.lg) {
-                    Text(headerTitle)
-                        .font(AppTypography.title)
-                        .foregroundStyle(AppColors.textPrimary)
-                        .animation(.easeInOut(duration: 0.2), value: headerTitle)
-
-                    ThemePicker(
-                        selectedCategory: $selectedCategory,
-                        isRecording: viewModel.isRecording
-                    )
-
-                    VStack(spacing: AppSpacing.md) {
-                        EchoInputField(
-                            title: "Titel",
-                            placeholder: "Ge minnet en titel",
-                            text: $title,
-                            icon: "textformat"
-                        )
-
-                        EchoInputField(
-                            title: "Berättelse",
-                            placeholder: "Skriv en kort berättelse",
-                            text: $story,
-                            icon: "quote.bubble",
-                            axis: .vertical,
-                            minHeight: 92
-                        )
-                    }
-
-                    if !viewModel.errorMessage.isEmpty {
-                        Text(viewModel.errorMessage)
-                            .font(AppTypography.caption)
-                            .foregroundStyle(AppColors.people)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    if !hasApprovedRecording && viewModel.recordedAudioURL == nil {
-                        RecordButton(isRecording: viewModel.isRecording) {
-                            hasApprovedRecording = false
-                            viewModel.toggleRecording()
-                        }
-                        .transition(.scale(scale: 0.96).combined(with: .opacity))
-                    }
-
-                    if viewModel.recordedAudioURL != nil && !viewModel.isRecording {
-                        RecordingAudioBanner(
-                            isApproved: hasApprovedRecording,
-                            canSaveMemory: canSaveMemory,
-                            isMissingTitle: isMissingTitle,
-                            isMissingStory: isMissingStory,
-                            onApprove: {
-                                approveRecording()
+                    if let savedEcho {
+                        SavedMemoryConfirmationView(
+                            echo: savedEcho,
+                            onPlayAudio: {
+                                print("Play saved memory audio")
+                                // Connect AudioPlayer/AudioService here later
                             },
-                            onDiscard: {
-                                discardRecording()
-                            },
-                            onRecordAgain: {
-                                discardRecording()
+                            onCreateAnother: {
+                                startNewMemory()
                             }
                         )
-                        .transition(.scale(scale: 0.96).combined(with: .opacity))
-                    }
-
-                    SaveMemoryButton(isEnabled: canSaveMemory) {
-                        saveMemory()
+                    } else {
+                        recordingForm
                     }
                 }
                 .padding(.horizontal, AppSpacing.lg)
                 .padding(.top, AppSpacing.xl)
-                .padding(.bottom, 130)
+                .padding(.bottom, 170)
             }
             .scrollIndicators(.hidden)
         }
         .animation(.spring(response: 0.32, dampingFraction: 0.78), value: hasApprovedRecording)
         .animation(.easeInOut(duration: 0.2), value: canSaveMemory)
+        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: savedEcho != nil)
     }
+
+    // MARK: - Recording form
+
+    private var recordingForm: some View {
+        VStack(spacing: AppSpacing.lg) {
+            Text(headerTitle)
+                .font(AppTypography.title)
+                .foregroundStyle(AppColors.textPrimary)
+                .animation(.easeInOut(duration: 0.2), value: headerTitle)
+
+            ThemePicker(
+                selectedCategory: $selectedCategory,
+                isRecording: viewModel.isRecording
+            )
+
+            VStack(spacing: AppSpacing.md) {
+                EchoInputField(
+                    title: "Titel",
+                    placeholder: "Ge minnet en titel",
+                    text: $title,
+                    icon: "textformat"
+                )
+
+                EchoInputField(
+                    title: "Berättelse",
+                    placeholder: "Skriv en kort berättelse",
+                    text: $story,
+                    icon: "quote.bubble",
+                    axis: .vertical,
+                    minHeight: 92
+                )
+
+                ImagePickerCard(
+                    selectedImageData: selectedImageData,
+                    selectedPhotoItem: $selectedPhotoItem,
+                    isLoadingImage: isLoadingImage,
+                    errorMessage: imageErrorMessage,
+                    onRemoveImage: {
+                        selectedPhotoItem = nil
+                        selectedImageData = nil
+                        imageErrorMessage = ""
+                    }
+                )
+                .onChange(of: selectedPhotoItem) { _, newItem in
+                    Task {
+                        await loadSelectedImage(from: newItem)
+                    }
+                }
+            }
+
+            if !viewModel.errorMessage.isEmpty {
+                Text(viewModel.errorMessage)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.people)
+                    .multilineTextAlignment(.center)
+            }
+
+            if shouldShowRecordButton {
+                RecordButton(isRecording: viewModel.isRecording) {
+                    hasApprovedRecording = false
+                    viewModel.toggleRecording()
+                }
+                .transition(.scale(scale: 0.96).combined(with: .opacity))
+            }
+
+            if viewModel.recordedAudioURL != nil && !viewModel.isRecording {
+                RecordingAudioBanner(
+                    isApproved: hasApprovedRecording,
+                    canSaveMemory: canSaveMemory,
+                    isMissingTitle: isMissingTitle,
+                    isMissingStory: isMissingStory,
+                    isMissingImage: isMissingImage,
+                    onApprove: {
+                        approveRecording()
+                    },
+                    onDiscard: {
+                        discardRecording()
+                    },
+                    onRecordAgain: {
+                        discardRecording()
+                    }
+                )
+                .transition(.scale(scale: 0.96).combined(with: .opacity))
+            }
+
+            SaveMemoryButton(isEnabled: canSaveMemory) {
+                saveMemory()
+            }
+        }
+    }
+
+    // MARK: - State
 
     private var headerTitle: String {
         if viewModel.isRecording {
@@ -117,6 +170,10 @@ struct RecordView: View {
         }
 
         return "Börja spela in"
+    }
+
+    private var shouldShowRecordButton: Bool {
+        !hasApprovedRecording && viewModel.recordedAudioURL == nil
     }
 
     private var trimmedTitle: String {
@@ -135,12 +192,19 @@ struct RecordView: View {
         trimmedStory.isEmpty
     }
 
+    private var isMissingImage: Bool {
+        selectedImageData == nil
+    }
+
     private var canSaveMemory: Bool {
         hasApprovedRecording &&
         viewModel.recordedAudioURL != nil &&
         !isMissingTitle &&
-        !isMissingStory
+        !isMissingStory &&
+        !isMissingImage
     }
+
+    // MARK: - Actions
 
     private func approveRecording() {
         withAnimation {
@@ -160,25 +224,83 @@ struct RecordView: View {
             return
         }
 
+        guard let selectedImageData else {
+            viewModel.errorMessage = "Du behöver lägga till en bild."
+            return
+        }
+
         print("Spara minne trycktes")
 
-        if viewModel.saveEcho(
-            in: context,
-            title: title,
-            story: story,
-            category: selectedCategory,
-            latitude: 0,
-            longitude: 0
-        ) != nil {
-            print("Echo sparad")
+        do {
+            let imageName = try photoStorageService.saveImageData(selectedImageData)
 
+            if let echo = viewModel.saveEcho(
+                in: context,
+                title: title,
+                story: story,
+                category: selectedCategory,
+                latitude: 0,
+                longitude: 0,
+                imageName: imageName
+            ) {
+                print("Echo sparad")
+
+                savedEcho = echo
+
+                title = ""
+                story = ""
+                selectedPhotoItem = nil
+                self.selectedImageData = nil
+                imageErrorMessage = ""
+                hasApprovedRecording = false
+                viewModel.clearRecordingAfterSave()
+            } else {
+                photoStorageService.deleteImage(named: imageName)
+                print("Ingen echo sparades")
+            }
+        } catch {
+            viewModel.errorMessage = "Bilden kunde inte sparas. Försök igen."
+        }
+    }
+
+    private func startNewMemory() {
+        withAnimation {
+            savedEcho = nil
             title = ""
             story = ""
+            selectedPhotoItem = nil
+            selectedImageData = nil
+            imageErrorMessage = ""
             hasApprovedRecording = false
-            viewModel.discardRecording()
-        } else {
-            print("Ingen echo sparades")
+            viewModel.errorMessage = ""
         }
+    }
+
+    @MainActor
+    private func loadSelectedImage(from item: PhotosPickerItem?) async {
+        selectedImageData = nil
+        imageErrorMessage = ""
+
+        guard let item else {
+            return
+        }
+
+        isLoadingImage = true
+
+        do {
+            if let data = try await item.loadTransferable(type: Data.self),
+               UIImage(data: data) != nil {
+                selectedImageData = data
+                imageErrorMessage = ""
+            } else {
+                imageErrorMessage = "Bilden kunde inte läsas. Testa en annan bild."
+            }
+        } catch {
+            imageErrorMessage = "Bilden kunde inte laddas. Om den ligger i iCloud, testa att öppna den i Bilder först."
+            print("Image loading failed:", error.localizedDescription)
+        }
+
+        isLoadingImage = false
     }
 }
 
@@ -221,6 +343,130 @@ private struct EchoInputField: View {
     }
 }
 
+// MARK: - Image picker card
+
+private struct ImagePickerCard: View {
+    let selectedImageData: Data?
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+    let isLoadingImage: Bool
+    let errorMessage: String
+    let onRemoveImage: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            HStack(spacing: AppSpacing.xs) {
+                Image(systemName: "photo")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppColors.primary)
+
+                Text("Bild")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+
+            ZStack {
+                if isLoadingImage {
+                    loadingImageView
+                } else if let selectedImageData,
+                          let uiImage = UIImage(data: selectedImageData) {
+                    selectedImagePreview(uiImage)
+                } else {
+                    emptyImagePicker
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 170)
+            .background(AppColors.surface.opacity(0.88))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        errorMessage.isEmpty ? AppColors.border : AppColors.people.opacity(0.45),
+                        lineWidth: 1
+                    )
+            )
+
+            if !errorMessage.isEmpty {
+                Text(errorMessage)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.people)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var loadingImageView: some View {
+        VStack(spacing: AppSpacing.sm) {
+            ProgressView()
+                .tint(AppColors.primary)
+
+            Text("Laddar bild...")
+                .font(AppTypography.caption)
+                .foregroundStyle(AppColors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 170)
+    }
+
+    private func selectedImagePreview(_ uiImage: UIImage) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .frame(height: 170)
+                .clipped()
+
+            Button(action: onRemoveImage) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(width: 32, height: 32)
+                    .background(AppColors.background.opacity(0.72))
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(AppColors.border, lineWidth: 1)
+                    )
+                    .padding(AppSpacing.sm)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Ta bort bild")
+        }
+    }
+
+    private var emptyImagePicker: some View {
+        PhotosPicker(
+            selection: $selectedPhotoItem,
+            matching: .images,
+            photoLibrary: .shared()
+        ) {
+            VStack(spacing: AppSpacing.sm) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.primary.opacity(0.14))
+                        .frame(width: 46, height: 46)
+
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 21, weight: .semibold))
+                        .foregroundStyle(AppColors.primary)
+                }
+
+                Text("Lägg till bild")
+                    .font(AppTypography.headline)
+                    .foregroundStyle(AppColors.textPrimary)
+
+                Text("Välj en bild från biblioteket")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 170)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Recording audio banner
 
 private struct RecordingAudioBanner: View {
@@ -228,6 +474,7 @@ private struct RecordingAudioBanner: View {
     let canSaveMemory: Bool
     let isMissingTitle: Bool
     let isMissingStory: Bool
+    let isMissingImage: Bool
     let onApprove: () -> Void
     let onDiscard: () -> Void
     let onRecordAgain: () -> Void
@@ -319,19 +566,21 @@ private struct RecordingAudioBanner: View {
             return "Allt är klart. Du kan spara minnet nu."
         }
 
-        if isMissingTitle && isMissingStory {
-            return "Fyll i titel och berättelse för att kunna spara minnet."
-        }
+        var missingParts: [String] = []
 
         if isMissingTitle {
-            return "Fyll i en titel för att kunna spara minnet."
+            missingParts.append("titel")
         }
 
         if isMissingStory {
-            return "Fyll i en berättelse för att kunna spara minnet."
+            missingParts.append("berättelse")
         }
 
-        return "Fyll i resten av minnet för att kunna spara."
+        if isMissingImage {
+            missingParts.append("bild")
+        }
+
+        return "Fyll i \(missingParts.joined(separator: ", ")) för att kunna spara minnet."
     }
 
     private var iconName: String {
@@ -371,6 +620,129 @@ private struct RecordingAudioBanner: View {
     }
 }
 
+// MARK: - Saved memory confirmation
+
+private struct SavedMemoryConfirmationView: View {
+    let echo: EchoMemory
+    let onPlayAudio: () -> Void
+    let onCreateAnother: () -> Void
+
+    var body: some View {
+        VStack(spacing: AppSpacing.xl) {
+            confirmationHeader
+
+            VStack(spacing: AppSpacing.lg) {
+                MemoryTicketView(
+                    title: echo.title,
+                    date: echo.date.formatted(date: .abbreviated, time: .omitted),
+                    category: echo.category.displayName,
+                    accentColor: echo.category.color,
+                    imageName: echo.imageName
+                ) {
+                    onPlayAudio()
+                }
+                .frame(maxWidth: .infinity)
+
+                savedMemoryDetailsCard
+
+                PrimaryButton(
+                    "Skapa ett till minne",
+                    systemImage: "plus",
+                    action: onCreateAnother
+                )
+            }
+        }
+        .padding(.top, AppSpacing.xl)
+        .padding(.bottom, AppSpacing.xl)
+    }
+
+    private var confirmationHeader: some View {
+        VStack(spacing: AppSpacing.md) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.nature.opacity(0.16))
+                    .frame(width: 58, height: 58)
+
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(AppColors.nature)
+            }
+
+            Text("Minnet sparat")
+                .font(AppTypography.title)
+                .foregroundStyle(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private var savedMemoryDetailsCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            HStack(spacing: AppSpacing.sm) {
+                Image(systemName: "quote.bubble.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppColors.primary)
+
+                Text("Berättelse")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+
+                Spacer()
+            }
+
+            Text(displayStory)
+                .font(AppTypography.body)
+                .foregroundStyle(AppColors.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+                .overlay(AppColors.border)
+
+            Button(action: onPlayAudio) {
+                HStack(spacing: AppSpacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.primary.opacity(0.16))
+                            .frame(width: 40, height: 40)
+
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(AppColors.primary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Spela upp ljud")
+                            .font(AppTypography.headline)
+                            .foregroundStyle(AppColors.textPrimary)
+
+                        Text("Lyssna på inspelningen")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "waveform")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppColors.primary.opacity(0.8))
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(AppSpacing.md)
+        .background(AppColors.surface.opacity(0.88))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(AppColors.border, lineWidth: 1)
+        )
+    }
+
+    private var displayStory: String {
+        let trimmedStory = echo.story.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedStory.isEmpty ? "Ingen berättelse tillagd." : trimmedStory
+    }
+}
+
 // MARK: - Save memory button
 
 private struct SaveMemoryButton: View {
@@ -378,35 +750,30 @@ private struct SaveMemoryButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        if isEnabled {
+            PrimaryButton(
+                "Spara minne",
+                systemImage: "square.and.arrow.down",
+                action: action
+            )
+        } else {
             HStack(spacing: AppSpacing.sm) {
                 Image(systemName: "square.and.arrow.down")
 
                 Text("Spara minne")
                     .font(AppTypography.headline)
             }
-            .foregroundStyle(isEnabled ? AppColors.primary : AppColors.textMuted)
+            .foregroundStyle(AppColors.textMuted)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(
-                isEnabled
-                ? AppColors.primary.opacity(0.12)
-                : AppColors.surface.opacity(0.55)
-            )
+            .background(AppColors.surface.opacity(0.55))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isEnabled
-                        ? AppColors.primary.opacity(0.45)
-                        : AppColors.border,
-                        lineWidth: 1
-                    )
+                    .stroke(AppColors.border, lineWidth: 1)
             )
+            .opacity(0.65)
         }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1.0 : 0.65)
     }
 }
 
