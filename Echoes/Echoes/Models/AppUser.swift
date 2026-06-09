@@ -23,6 +23,7 @@ class AppUser {
     // Stats – updated locally as the user records, plays and likes echoes
     var memoriesCount: Int
     var playsCount: Int
+    var viewersCount: Int
     var likesCount: Int
 
     // Local profile data
@@ -42,6 +43,7 @@ class AppUser {
         self.firebaseUID = firebaseUID
         self.memoriesCount = 0
         self.playsCount = 0
+        self.viewersCount = 0
         self.likesCount = 0
         self.joinDate = Date()
         self.bio = ""

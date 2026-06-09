@@ -106,9 +106,9 @@ struct ProfileView: View {
             )
 
             EchoStatCard(
-                value: auth.currentUser?.likesCount ?? 0,
-                label: "Likes",
-                icon: "heart.fill",
+                value: auth.currentUser?.viewersCount ?? 0,
+                label: "Visningar",
+                icon: "eye.fill",
                 color: AppColors.echo
             )
         }

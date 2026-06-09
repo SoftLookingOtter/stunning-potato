@@ -130,11 +130,11 @@ struct RouteListView: View {
                 .font(.system(size: 42, weight: .semibold))
                 .foregroundStyle(AppColors.primary.opacity(0.7))
 
-            Text("Inga rutter ännu")
+            Text("Inga sparade Echon")
                 .font(AppTypography.headline)
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text("När rutter skapas visas de här.")
+            Text("När du sparar Echon visas de här.")
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
