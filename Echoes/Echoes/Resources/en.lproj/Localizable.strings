@@ -42,6 +42,7 @@
 "tab_map" = "Explore";
 "tab_record" = "Record";
 "tab_routes" = "Routes";
+"tab_saved_echo" = "Saved Echo";
 "tab_profile" = "Profile";
 
 /* MemoryCategory.swift */
