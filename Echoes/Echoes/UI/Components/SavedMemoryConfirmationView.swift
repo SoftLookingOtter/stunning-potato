@@ -13,10 +13,11 @@ struct SavedMemoryConfirmationView: View {
     let onCreateAnother: () -> Void
 
     var body: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: AppSpacing.lg) {
             confirmationHeader
+                .zIndex(1)
 
-            VStack(spacing: AppSpacing.lg) {
+            VStack(spacing: AppSpacing.md) {
                 MemoryTicketView(
                     title: echo.title,
                     date: echo.date.formatted(date: .abbreviated, time: .omitted),
@@ -27,6 +28,7 @@ struct SavedMemoryConfirmationView: View {
                     onPlayAudio()
                 }
                 .frame(maxWidth: .infinity)
+                .frame(height: 255)
 
                 savedMemoryDetailsCard
 
@@ -35,14 +37,15 @@ struct SavedMemoryConfirmationView: View {
                     systemImage: "plus",
                     action: onCreateAnother
                 )
+                .padding(.top, AppSpacing.sm)
             }
         }
-        .padding(.top, AppSpacing.xl)
+        .padding(.top, AppSpacing.lg)
         .padding(.bottom, AppSpacing.xl)
     }
 
     private var confirmationHeader: some View {
-        VStack(spacing: AppSpacing.md) {
+        VStack(spacing: AppSpacing.sm) {
             ZStack {
                 Circle()
                     .fill(AppColors.nature.opacity(0.16))
@@ -62,22 +65,46 @@ struct SavedMemoryConfirmationView: View {
 
     private var savedMemoryDetailsCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            HStack(spacing: AppSpacing.sm) {
-                Image(systemName: "quote.bubble.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(AppColors.primary)
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                HStack(spacing: AppSpacing.sm) {
+                    Image(systemName: "textformat")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColors.primary)
 
-                Text("Berättelse")
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textSecondary)
+                    Text("Titel")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.textSecondary)
 
-                Spacer()
+                    Spacer()
+                }
+
+                Text(displayTitle)
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            Text(displayStory)
-                .font(AppTypography.body)
-                .foregroundStyle(AppColors.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
+            Divider()
+                .overlay(AppColors.border)
+
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                HStack(spacing: AppSpacing.sm) {
+                    Image(systemName: "quote.bubble.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColors.primary)
+
+                    Text("Berättelse")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+
+                    Spacer()
+                }
+
+                Text(displayStory)
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             Divider()
                 .overlay(AppColors.border)
@@ -122,6 +149,11 @@ struct SavedMemoryConfirmationView: View {
         )
     }
 
+    private var displayTitle: String {
+        let trimmedTitle = echo.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedTitle.isEmpty ? "Ingen titel tillagd." : trimmedTitle
+    }
+
     private var displayStory: String {
         let trimmedStory = echo.story.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedStory.isEmpty ? "Ingen berättelse tillagd." : trimmedStory
@@ -129,15 +161,29 @@ struct SavedMemoryConfirmationView: View {
 }
 
 #Preview {
-    SavedMemoryConfirmationView(
-        echo: EchoMemory(
-            title: "Haag",
-            story: "Ethernet",
-            category: .nostalgic,
-            latitude: 0,
-            longitude: 0
-        ),
-        onPlayAudio: {},
-        onCreateAnother: {}
-    )
+    ZStack {
+        AppColors.background
+            .ignoresSafeArea()
+
+        StarBackgroundView()
+            .ignoresSafeArea()
+
+        ScrollView {
+            SavedMemoryConfirmationView(
+                echo: EchoMemory(
+                    title: "Haag",
+                    story: "Ethernet",
+                    category: .nostalgic,
+                    latitude: 0,
+                    longitude: 0
+                ),
+                onPlayAudio: {},
+                onCreateAnother: {}
+            )
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.lg)
+            .padding(.bottom, 190)
+        }
+        .scrollIndicators(.hidden)
+    }
 }
