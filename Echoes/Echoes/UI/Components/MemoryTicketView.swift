@@ -3,6 +3,7 @@
 //  Echoes
 //
 //  Updated by Sara Lindén on 2026-06-06.
+//  Updated by Sara Lindén on 2026-06-10.
 //
 
 import SwiftUI
@@ -289,18 +290,19 @@ struct MemoryTicketView: View {
 
     private var ticketBackground: some View {
         ZStack {
-            parchmentBase
+            ticketPaper
 
             accentColor
-                .opacity(0.34)
+                .opacity(0.99)
 
-            parchmentBase
+            // Adds a faded, aged paper wash without fully killing the category color.
+            Color(red: 0.93, green: 0.84, blue: 0.66)
                 .opacity(0.18)
         }
         .overlay(
             LinearGradient(
                 colors: [
-                    .white.opacity(0.12),
+                    .white.opacity(0.18),
                     .black.opacity(0.08)
                 ],
                 startPoint: .topLeading,
@@ -310,24 +312,33 @@ struct MemoryTicketView: View {
         .overlay(
             LinearGradient(
                 colors: [
-                    .black.opacity(0.14),
+                    .white.opacity(0.10),
                     .clear,
                     .black.opacity(0.12)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .overlay(
+            LinearGradient(
+                colors: [
+                    .black.opacity(0.10),
+                    .clear,
+                    .black.opacity(0.10)
                 ],
                 startPoint: .leading,
                 endPoint: .trailing
             )
         )
+        .saturation(0.60)
+        .brightness(0.03)
         .overlay(ticketTexture)
         .overlay(ticketDirtTexture)
     }
 
     private var ticketPaper: Color {
-        parchmentBase
-    }
-
-    private var parchmentBase: Color {
-        Color(red: 0.72, green: 0.58, blue: 0.36)
+        Color(red: 0.86, green: 0.79, blue: 0.66)
     }
 
     private var ticketTexture: some View {
