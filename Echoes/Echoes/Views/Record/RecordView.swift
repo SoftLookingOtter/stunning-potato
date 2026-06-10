@@ -4,7 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Updated by Mikael Engvall on 2026-05-29.
-//  Updated by Sara Lindén on 2026-06-06.
+//  Updated by Sara Lindén on 2026-06-10.
 //
 
 import SwiftUI
@@ -41,7 +41,7 @@ struct RecordView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: AppSpacing.lg) {
+                VStack(spacing: AppSpacing.md) {
                     if let savedEcho {
                         SavedMemoryConfirmationView(
                             echo: savedEcho,
@@ -58,8 +58,8 @@ struct RecordView: View {
                     }
                 }
                 .padding(.horizontal, AppSpacing.lg)
-                .padding(.top, AppSpacing.xl)
-                .padding(.bottom, 170)
+                .padding(.top, AppSpacing.lg)
+                .padding(.bottom, 190)
             }
             .scrollIndicators(.hidden)
         }
@@ -71,7 +71,7 @@ struct RecordView: View {
     // MARK: - Recording form
 
     private var recordingForm: some View {
-        VStack(spacing: AppSpacing.lg) {
+        VStack(spacing: AppSpacing.md) {
             Text(headerTitle)
                 .font(AppTypography.title)
                 .foregroundStyle(AppColors.textPrimary)
@@ -82,7 +82,7 @@ struct RecordView: View {
                 isRecording: viewModel.isRecording
             )
 
-            VStack(spacing: AppSpacing.md) {
+            VStack(spacing: AppSpacing.sm) {
                 EchoInputField(
                     title: "Titel",
                     placeholder: "Ge minnet en titel",
@@ -96,7 +96,7 @@ struct RecordView: View {
                     text: $story,
                     icon: "quote.bubble",
                     axis: .vertical,
-                    minHeight: 92
+                    minHeight: 76
                 )
 
                 ImagePickerCard(
@@ -329,7 +329,7 @@ private struct EchoInputField: View {
             TextField(placeholder, text: $text, axis: axis)
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.textPrimary)
-                .lineLimit(axis == .vertical ? 5 : 1)
+                .lineLimit(axis == .vertical ? 4 : 1)
                 .padding(AppSpacing.md)
                 .frame(minHeight: minHeight, alignment: .topLeading)
                 .background(AppColors.surface.opacity(0.88))
@@ -351,6 +351,8 @@ private struct ImagePickerCard: View {
     let isLoadingImage: Bool
     let errorMessage: String
     let onRemoveImage: () -> Void
+
+    private let imageCardHeight: CGFloat = 135
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -375,7 +377,7 @@ private struct ImagePickerCard: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 170)
+            .frame(height: imageCardHeight)
             .background(AppColors.surface.opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
@@ -405,7 +407,7 @@ private struct ImagePickerCard: View {
                 .foregroundStyle(AppColors.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 170)
+        .frame(height: imageCardHeight)
     }
 
     private func selectedImagePreview(_ uiImage: UIImage) -> some View {
@@ -414,14 +416,14 @@ private struct ImagePickerCard: View {
                 .resizable()
                 .scaledToFill()
                 .frame(maxWidth: .infinity)
-                .frame(height: 170)
+                .frame(height: imageCardHeight)
                 .clipped()
 
             Button(action: onRemoveImage) {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(AppColors.textPrimary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 30, height: 30)
                     .background(AppColors.background.opacity(0.72))
                     .clipShape(Circle())
                     .overlay(
@@ -441,14 +443,14 @@ private struct ImagePickerCard: View {
             matching: .images,
             photoLibrary: .shared()
         ) {
-            VStack(spacing: AppSpacing.sm) {
+            VStack(spacing: 6) {
                 ZStack {
                     Circle()
                         .fill(AppColors.primary.opacity(0.14))
-                        .frame(width: 46, height: 46)
+                        .frame(width: 38, height: 38)
 
                     Image(systemName: "photo.badge.plus")
-                        .font(.system(size: 21, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(AppColors.primary)
                 }
 
@@ -461,7 +463,7 @@ private struct ImagePickerCard: View {
                     .foregroundStyle(AppColors.textSecondary)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 170)
+            .frame(height: imageCardHeight)
         }
         .buttonStyle(.plain)
     }
@@ -480,18 +482,18 @@ private struct RecordingAudioBanner: View {
     let onRecordAgain: () -> Void
 
     var body: some View {
-        HStack(spacing: AppSpacing.md) {
+        HStack(spacing: AppSpacing.sm) {
             ZStack {
                 Circle()
                     .fill(iconColor.opacity(0.18))
-                    .frame(width: 38, height: 38)
+                    .frame(width: 34, height: 34)
 
                 Image(systemName: iconName)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(iconColor)
             }
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(AppTypography.headline)
                     .foregroundStyle(AppColors.textPrimary)
@@ -499,6 +501,7 @@ private struct RecordingAudioBanner: View {
                 Text(message)
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
+                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -511,15 +514,15 @@ private struct RecordingAudioBanner: View {
                     Text("Spela in nytt")
                         .font(AppTypography.caption)
                         .foregroundStyle(AppColors.textSecondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
                         .background(AppColors.surfaceLight.opacity(0.85))
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Spela in nytt ljud")
             } else {
-                HStack(spacing: AppSpacing.sm) {
+                HStack(spacing: AppSpacing.xs) {
                     CircleIconButton(
                         systemName: "xmark",
                         foregroundColor: AppColors.people,
@@ -540,7 +543,8 @@ private struct RecordingAudioBanner: View {
                 }
             }
         }
-        .padding(AppSpacing.md)
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, AppSpacing.sm)
         .background(backgroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
@@ -790,9 +794,9 @@ private struct CircleIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(foregroundColor)
-                .frame(width: 38, height: 38)
+                .frame(width: 34, height: 34)
                 .background(backgroundColor)
                 .clipShape(Circle())
                 .overlay(
