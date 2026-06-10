@@ -4,7 +4,7 @@
 //
 //  Created by Sara Lindén on 2026-05-17.
 //  Implemented by Ibrahim on 2026-05-18.
-//  Updated by Sara Lindén on 2026-06-03.
+//  Updated by Sara Lindén on 2026-06-06.
 //
 
 import SwiftUI
@@ -39,7 +39,7 @@ enum MemoryCategory: String, Codable, CaseIterable {
         case .historical:
             return AppColors.history
         case .family:
-            return AppColors.nature
+            return AppColors.people
         case .mysterious:
             return AppColors.mystery
         }
