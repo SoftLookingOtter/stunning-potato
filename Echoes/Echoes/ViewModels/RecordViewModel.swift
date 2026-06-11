@@ -80,4 +80,20 @@ final class RecordViewModel {
         errorMessage = ""
         return echo
     }
+    func discardRecording() {
+        // Stop if its recording
+        
+        if isRecording {
+            audioService.stopRecording()
+            isRecording = false
+        }
+        
+        // Delete the audio from the devise
+        if let url = recordedAudioURL {
+            try?  FileManager.default.removeItem(at: url)
+        }
+        // Restart status
+        recordedAudioURL = nil
+        errorMessage = ""
+    }
 }
