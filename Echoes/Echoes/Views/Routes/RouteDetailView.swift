@@ -34,7 +34,8 @@ struct RouteDetailView: View {
                                 date: echo.date.formatted(date: .abbreviated, time: .omitted),
                                 category: echo.category.displayName,
                                 location: nil,
-                                imageName: echo.imageName
+                                imageName: echo.imageName,
+                                isPlaying: false
                             ) {
                                 // Audio playback — wired by Mikael
                             }
