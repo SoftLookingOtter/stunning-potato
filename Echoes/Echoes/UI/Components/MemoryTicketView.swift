@@ -13,6 +13,7 @@ struct MemoryTicketView: View {
     let category: String
     let location: String?
     let imageName: String?
+    let isPlaying: Bool
     let onPlay: () -> Void
 
     var body: some View {
@@ -125,7 +126,7 @@ struct MemoryTicketView: View {
             waveform(scale: scale)
 
             Button(action: onPlay) {
-                Image(systemName: "play.fill")
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 13 * scale, weight: .bold))
                     .foregroundStyle(ticketPaper)
                     .frame(width: 32 * scale, height: 32 * scale)
@@ -311,7 +312,8 @@ struct TicketShape: Shape {
             date: "12 maj 1978",
             category: "Familjeminnen",
             location: "Gamla stan",
-            imageName: nil
+            imageName: nil,
+            isPlaying: false
         ) {
             print("Play tapped")
         }
