@@ -13,12 +13,19 @@ import SwiftData
 
 struct RouteListView: View {
 
-    @Query(RouteViewModel.allRoutesDescriptor()) private var routes: [Route]
-    @Environment(\.modelContext) private var context
+    @Query(sort: \EchoMemory.date, order: .reverse) private var allEchoes: [EchoMemory]
     @State private var viewModel = RouteViewModel()
     @State private var selectedCategory: MemoryCategory?
     @State private var showFilters = false
-
+    
+    @State private var playbackService = PlaybackService()
+    @State private var currentlyPlayingID: UUID?
+    
+    private var SavedEchoes: [EchoMemory] {
+        allEchoes.filter {
+            $0.audioFilePath != nil
+        }
+    }
     var body: some View {
         NavigationStack {
             ZStack {
@@ -96,19 +103,20 @@ struct RouteListView: View {
 
                     ScrollView {
                         VStack(spacing: AppSpacing.lg) {
-                            if routes.isEmpty {
+                            if SavedEchoes.isEmpty {
                                 emptyState
                             } else {
-                                ForEach(routes, id: \.id) { route in
-                                    NavigationLink(destination: RouteDetailView(route: route)) {
-                                        RouteCardView(
-                                            title: route.title,
-                                            memoryCount: route.echoes.count,
-                                            distance: 0,
-                                            rating: 0
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
+                                ForEach(SavedEchoes) {
+                                    echo in
+                                    MemoryTicketView(
+                                        title: echo.title,
+                                        date: echo.date.formatted(date: .abbreviated, time: .omitted),
+                                        category: echo.category.displayName,
+                                        location: nil,
+                                        imageName: echo.imageName,
+                                        isPlaying: false,
+                                        onPlay: {})
+                                    
                                 }
                             }
                         }
@@ -121,6 +129,19 @@ struct RouteListView: View {
                 .padding(.top, AppSpacing.xl)
             }
             .toolbar(.hidden, for: .navigationBar)
+        }
+    }
+    
+    private func handelPlay(for echo: EchoMemory) {
+        guard let path = echo.audioFilePath else { return }
+    
+        if currentlyPlayingID == echo.id {
+            playbackService.stop()
+            currentlyPlayingID = nil
+        } else {
+            playbackService.stop()
+            playbackService.play(path: path)
+            currentlyPlayingID = echo.id
         }
     }
 
