@@ -20,6 +20,13 @@ struct RecordView: View {
     @State private var title = ""
     @State private var story = ""
 
+    private func discardRecording() {
+        viewModel.discardRecording()
+        title = ""
+        story = ""
+        selectedCategory = .nostalgic
+    }
+
     var body: some View {
         ZStack {
             AppColors.background
@@ -114,8 +121,33 @@ struct RecordView: View {
             }
             .scrollIndicators(.hidden)
         }
+        
+        .overlay(alignment: .topLeading) {
+            if viewModel.recordedAudioURL != nil {
+                Button{
+                    discardRecording()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size:15, weight: .semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .frame(width:36, height:36)
+                        .background(AppColors.surface.opacity(0.88))
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(AppColors.border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, AppSpacing.xl)
+                .padding(.leading, AppSpacing.lg)
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: viewModel.recordedAudioURL != nil)
     }
 }
+
+
 
 // MARK: - Echo input field
 
@@ -152,6 +184,15 @@ private struct EchoInputField: View {
                         .stroke(AppColors.border, lineWidth: 1)
                 )
                 .tint(AppColors.primary)
+                .submitLabel(.done)
+                .onSubmit {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil,
+                        from: nil,
+                        for: nil
+                    )
+                }
         }
     }
 }
