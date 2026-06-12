@@ -136,6 +136,7 @@ struct MapView: View {
                     category: echo.category?.displayName ?? "ECHO",
                     accentColor: echo.category?.color ?? AppColors.echo,
                     imageName: echo.imageName,
+                    isPlaying: false,
                     onPlay: {
                         // Audio wired by Mikael
                     }

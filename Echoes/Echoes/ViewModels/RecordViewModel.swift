@@ -108,35 +108,24 @@ final class RecordViewModel {
         }
     }
 
-    // Discards an unsaved recording and deletes the temporary audio file.
-    func discardRecording() {
-        if let recordedAudioURL {
-            try? FileManager.default.removeItem(at: recordedAudioURL)
-        }
-
-        recordedAudioURL = nil
-        errorMessage = ""
-    }
-
     // Clears the current recording reference after saving.
     // This does not delete the saved audio file.
     func clearRecordingAfterSave() {
         recordedAudioURL = nil
         errorMessage = ""
     }
+
+    // Discards an unsaved recording and deletes the temporary audio file.
     func discardRecording() {
-        // Stop if its recording
-        
         if isRecording {
             audioService.stopRecording()
             isRecording = false
         }
-        
-        // Delete the audio from the devise
+
         if let url = recordedAudioURL {
-            try?  FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: url)
         }
-        // Restart status
+
         recordedAudioURL = nil
         errorMessage = ""
     }

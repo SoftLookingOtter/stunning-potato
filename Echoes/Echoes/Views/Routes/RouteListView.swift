@@ -112,7 +112,7 @@ struct RouteListView: View {
                                         title: echo.title,
                                         date: echo.date.formatted(date: .abbreviated, time: .omitted),
                                         category: echo.category.displayName,
-                                        location: nil,
+                                        accentColor: echo.category.color,
                                         imageName: echo.imageName,
                                         isPlaying: false,
                                         onPlay: {})

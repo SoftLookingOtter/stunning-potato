@@ -23,7 +23,8 @@ struct SavedMemoryConfirmationView: View {
                     date: echo.date.formatted(date: .abbreviated, time: .omitted),
                     category: echo.category.displayName,
                     accentColor: echo.category.color,
-                    imageName: echo.imageName
+                    imageName: echo.imageName,
+                    isPlaying: false
                 ) {
                     onPlayAudio()
                 }

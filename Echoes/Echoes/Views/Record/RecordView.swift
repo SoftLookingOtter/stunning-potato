@@ -32,13 +32,6 @@ struct RecordView: View {
 
     private let photoStorageService = PhotoStorageService()
 
-    private func discardRecording() {
-        viewModel.discardRecording()
-        title = ""
-        story = ""
-        selectedCategory = .nostalgic
-    }
-
     var body: some View {
         ZStack {
             AppColors.background
@@ -69,10 +62,33 @@ struct RecordView: View {
                 .padding(.bottom, 190)
             }
             .scrollIndicators(.hidden)
+            .overlay(alignment: .topLeading) {
+                if viewModel.recordedAudioURL != nil {
+                    Button {
+                        discardRecording()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary)
+                            .frame(width: 36, height: 36)
+                            .background(AppColors.surface.opacity(0.88))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(AppColors.border, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, AppSpacing.xl)
+                    .padding(.leading, AppSpacing.lg)
+                    .transition(.opacity)
+                }
+            }
         }
         .animation(.spring(response: 0.32, dampingFraction: 0.78), value: hasApprovedRecording)
         .animation(.easeInOut(duration: 0.2), value: canSaveMemory)
         .animation(.spring(response: 0.34, dampingFraction: 0.82), value: savedEcho != nil)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.recordedAudioURL != nil)
     }
 
     // MARK: - Recording form
@@ -281,29 +297,6 @@ struct RecordView: View {
             hasApprovedRecording = false
             viewModel.errorMessage = ""
         }
-        
-        .overlay(alignment: .topLeading) {
-            if viewModel.recordedAudioURL != nil {
-                Button{
-                    discardRecording()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size:15, weight: .semibold))
-                        .foregroundStyle(AppColors.textPrimary)
-                        .frame(width:36, height:36)
-                        .background(AppColors.surface.opacity(0.88))
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(AppColors.border, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .padding(.top, AppSpacing.xl)
-                .padding(.leading, AppSpacing.lg)
-                .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: viewModel.recordedAudioURL != nil)
     }
 
     @MainActor

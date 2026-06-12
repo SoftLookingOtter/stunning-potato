@@ -752,7 +752,7 @@ struct TicketInsetBorder: Shape {
             title: "Mormors trädgård",
             date: "12 maj 1978",
             category: "Familjeminnen",
-            location: "Gamla stan",
+            accentColor: AppColors.primary,
             imageName: nil,
             isPlaying: false
         ) {
