@@ -33,6 +33,9 @@ struct RouteDetailView: View {
                                 title: echo.title,
                                 date: echo.date.formatted(date: .abbreviated, time: .omitted),
                                 category: echo.category.displayName,
+                                location: nil,
+                                imageName: echo.imageName,
+                                isPlaying: false
                                 accentColor: echo.category.color,
                                 imageName: echo.imageName
                             ) {

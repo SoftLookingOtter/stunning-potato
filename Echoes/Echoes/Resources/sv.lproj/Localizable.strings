@@ -42,6 +42,7 @@
 "tab_map" = "Utforska";
 "tab_record" = "Spela in";
 "tab_routes" = "Rutter";
+"tab_saved_echo" = "Sparat Echo";
 "tab_profile" = "Profil";
 
 /* MemoryCategory.swift */

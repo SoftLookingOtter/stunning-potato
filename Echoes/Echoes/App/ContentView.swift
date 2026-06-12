@@ -30,7 +30,12 @@ struct ContentView: View {
 
                 RouteListView()
                     .tabItem {
-                        Label("tab_routes", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                        Label {
+                            Text("tab_saved_echo")  // new localization key
+                            
+                        } icon: {
+                            Image(uiImage: .echoTabIcon)
+                        }
                     }
 
                 ProfileView()

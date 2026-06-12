@@ -15,6 +15,7 @@ struct MemoryTicketView: View {
     let category: String
     let accentColor: Color
     let imageName: String?
+    let isPlaying: Bool
     let onPlay: () -> Void
 
     var body: some View {
@@ -185,7 +186,7 @@ struct MemoryTicketView: View {
                 .padding(.trailing, 8 * scale)
 
             Button(action: onPlay) {
-                Image(systemName: "play.fill")
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 13 * scale, weight: .bold))
                     .foregroundStyle(ticketPaper)
                     .frame(width: 32 * scale, height: 32 * scale)
@@ -747,45 +748,15 @@ struct TicketInsetBorder: Shape {
         AppColors.background
             .ignoresSafeArea()
 
-        GeometryReader { proxy in
-            ScrollView {
-                VStack(spacing: 110) {
-                    MemoryTicketView(
-                        title: "Mormors trädgård",
-                        date: "12 maj 1978",
-                        category: MemoryCategory.family.displayName,
-                        accentColor: MemoryCategory.family.color,
-                        imageName: nil
-                    ) {
-                        print("Play tapped")
-                    }
-                    .frame(width: proxy.size.width - 32)
-
-                    MemoryTicketView(
-                        title: "Gamla cykelverkstaden",
-                        date: "3 juni 1952",
-                        category: MemoryCategory.historical.displayName,
-                        accentColor: MemoryCategory.historical.color,
-                        imageName: nil
-                    ) {
-                        print("Play tapped")
-                    }
-                    .frame(width: proxy.size.width - 32)
-
-                    MemoryTicketView(
-                        title: "Stadens hemlighet",
-                        date: "31 oktober 1920",
-                        category: MemoryCategory.mysterious.displayName,
-                        accentColor: MemoryCategory.mysterious.color,
-                        imageName: nil
-                    ) {
-                        print("Play tapped")
-                    }
-                    .frame(width: proxy.size.width - 32)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 100)
-            }
+        MemoryTicketView(
+            title: "Mormors trädgård",
+            date: "12 maj 1978",
+            category: "Familjeminnen",
+            location: "Gamla stan",
+            imageName: nil,
+            isPlaying: false
+        ) {
+            print("Play tapped")
         }
     }
 }

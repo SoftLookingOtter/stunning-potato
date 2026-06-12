@@ -124,4 +124,20 @@ final class RecordViewModel {
         recordedAudioURL = nil
         errorMessage = ""
     }
+    func discardRecording() {
+        // Stop if its recording
+        
+        if isRecording {
+            audioService.stopRecording()
+            isRecording = false
+        }
+        
+        // Delete the audio from the devise
+        if let url = recordedAudioURL {
+            try?  FileManager.default.removeItem(at: url)
+        }
+        // Restart status
+        recordedAudioURL = nil
+        errorMessage = ""
+    }
 }
