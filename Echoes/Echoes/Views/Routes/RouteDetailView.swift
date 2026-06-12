@@ -36,6 +36,8 @@ struct RouteDetailView: View {
                                 location: nil,
                                 imageName: echo.imageName,
                                 isPlaying: false
+                                accentColor: echo.category.color,
+                                imageName: echo.imageName
                             ) {
                                 // Audio playback — wired by Mikael
                             }
