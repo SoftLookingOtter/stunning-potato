@@ -5,7 +5,7 @@
 //  Created by Sara Lindén on 2026-05-17.
 //
 //
-//  Updated by Robin Eliasson 2026-05-25
+//  Updated by Robin Eliasson 2026-06-11
 
 import SwiftUI
 import MapKit
@@ -16,11 +16,27 @@ struct EchoPin: Identifiable {
     let id: UUID
     let coordinate: CLLocationCoordinate2D
     let category: MemoryCategory?
+    let title: String?
+    let story: String?
+    let date: Date?
+    let imageName: String?
 
-    init(id: UUID = UUID(), coordinate: CLLocationCoordinate2D, category: MemoryCategory? = nil) {
+    init(
+        id: UUID = UUID(),
+        coordinate: CLLocationCoordinate2D,
+        category: MemoryCategory? = nil,
+        title: String? = nil,
+        story: String? = nil,
+        date: Date? = nil,
+        imageName: String? = nil
+    ) {
         self.id = id
         self.coordinate = coordinate
         self.category = category
+        self.title = title
+        self.story = story
+        self.date = date
+        self.imageName = imageName
     }
 }
 
@@ -28,16 +44,12 @@ class MapViewModel: ObservableObject {
     @Published var locationService = LocationService()
     private let notificationService = NotificationService()
 
-
-    @Published var hiddenMemories: [EchoPin] = [
-        EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4118, longitude: 15.6224)),
-        EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4098, longitude: 15.6184)),
-        EchoPin(coordinate: CLLocationCoordinate2D(latitude: 58.4120, longitude: 15.6150))
-    ]
+    @Published var hiddenMemories: [EchoPin] = []
 
     @Published var distanceToNearestMemory: Double?
     @Published var memoriesWithinRangeCount: Int = 0
     @Published var activeRegionID: UUID?
+    @Published var revealedPinIDs: Set<UUID> = []
     @Published var userCoordinate: CLLocationCoordinate2D?
     @Published var activeCategories: Set<MemoryCategory> = Set(MemoryCategory.allCases)
 
@@ -53,11 +65,6 @@ class MapViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    #if DEBUG
-    private static let testMemoryOffsetMeters: Double = 250
-    private var hasSeededTestMemory = false
-    #endif
-
     init() {
         locationService.$userLocation
             .receive(on: DispatchQueue.main)
@@ -65,9 +72,6 @@ class MapViewModel: ObservableObject {
                 guard let self = self, let location = newLocation else { return }
                 self.userCoordinate = location.coordinate
                 self.updateProximity(for: location)
-                #if DEBUG
-                self.seedNearbyTestMemoryIfNeeded(near: location)
-                #endif
             }
             .store(in: &cancellables)
 
@@ -77,29 +81,143 @@ class MapViewModel: ObservableObject {
     }
 
     #if DEBUG
-    private func seedNearbyTestMemoryIfNeeded(near location: CLLocation) {
-        guard !hasSeededTestMemory else { return }
-        hasSeededTestMemory = true
+    /// Hårdkodade testdata vid Fridtunagatan i Linköping — en av varje kategori.
+    func seedFridtunagatanDemoEchoesIfNeeded(in context: ModelContext) {
+        let fridtunagatan = CLLocationCoordinate2D(latitude: 58.4154, longitude: 15.6175)
+        let degPerMeterLat = 1.0 / 111_000.0
+        let degPerMeterLon = 1.0 / (111_000.0 * cos(fridtunagatan.latitude * .pi / 180))
 
-        // 1° latitude ≈ 111 000 m, så vi får ca 250 m norrut från användaren
-        let latitudeOffset = Self.testMemoryOffsetMeters / 111_000.0
-        let testPin = EchoPin(coordinate: CLLocationCoordinate2D(
-            latitude: location.coordinate.latitude + latitudeOffset,
-            longitude: location.coordinate.longitude
-        ))
-        hiddenMemories.append(testPin)
-        locationService.startMonitoringRegions(for: hiddenMemories)
+        let demoEchoes = [
+            EchoMemory(
+                title: "Gamla cykelturen",
+                story: "Här cyklade jag som barn varje morgon. Lukten av nytvättad asfalt hänger fortfarande kvar.",
+                category: .nostalgic,
+                latitude: fridtunagatan.latitude + 180 * degPerMeterLat,
+                longitude: fridtunagatan.longitude
+            ),
+            EchoMemory(
+                title: "Söndagsfika hos farmor",
+                story: "Vi samlades alltid här på söndagar. Hennes kanelbullar var de bästa i världen.",
+                category: .family,
+                latitude: fridtunagatan.latitude,
+                longitude: fridtunagatan.longitude + 180 * degPerMeterLon
+            ),
+            EchoMemory(
+                title: "Smedjan vid hörnet",
+                story: "Här stod en gammal smedja på 1800-talet. Folk minns ljudet av hammaren än idag.",
+                category: .historical,
+                latitude: fridtunagatan.latitude - 180 * degPerMeterLat,
+                longitude: fridtunagatan.longitude
+            ),
+            EchoMemory(
+                title: "Den vita gestalten",
+                story: "På nätterna sägs det att en vit gestalt vandrar här. Ingen vet vem hon var.",
+                category: .mysterious,
+                latitude: fridtunagatan.latitude,
+                longitude: fridtunagatan.longitude - 180 * degPerMeterLon
+            )
+        ]
+
+        let demoTitles = Set(demoEchoes.map { $0.title })
+        let allMemories = (try? context.fetch(FetchDescriptor<EchoMemory>())) ?? []
+        let existingDemos = allMemories.filter { demoTitles.contains($0.title) }
+
+        let fridtunaCLLocation = CLLocation(latitude: fridtunagatan.latitude, longitude: fridtunagatan.longitude)
+        let allUpToDate = existingDemos.count == demoEchoes.count && existingDemos.allSatisfy { memory in
+            let memoryLocation = CLLocation(latitude: memory.latitude, longitude: memory.longitude)
+            return fridtunaCLLocation.distance(from: memoryLocation) < 500
+        }
+        if allUpToDate { return }
+
+        existingDemos.forEach { context.delete($0) }
+        demoEchoes.forEach { context.insert($0) }
+        try? context.save()
+        loadMemories(from: context)
+    }
+
+    /// Hårdkodade testdata vid Robins arbetsposition i Mjärdevi — en av varje kategori.
+    /// Tätt kluster runt 58.393007, 15.560433 så man kan nå alla med några stegs promenad.
+    func seedTeknikringenDemoEchoesIfNeeded(in context: ModelContext) {
+        let workPosition = CLLocationCoordinate2D(latitude: 58.393007, longitude: 15.560433)
+        let degPerMeterLat = 1.0 / 111_000.0
+        let degPerMeterLon = 1.0 / (111_000.0 * cos(workPosition.latitude * .pi / 180))
+
+        let demoEchoes = [
+            EchoMemory(
+                title: "Forskarens dröm",
+                story: "Här satt en ung doktorand och skissade på framtiden vid ett fönster med utsikt över parken.",
+                category: .nostalgic,
+                latitude: workPosition.latitude + 15 * degPerMeterLat,
+                longitude: workPosition.longitude
+            ),
+            EchoMemory(
+                title: "Lunchen med pappa",
+                story: "Pappa brukade möta mig här på fredagar. Vi delade alltid en kanelbulle från caféet.",
+                category: .family,
+                latitude: workPosition.latitude,
+                longitude: workPosition.longitude + 15 * degPerMeterLon
+            ),
+            EchoMemory(
+                title: "Mjärdevis första startup",
+                story: "1984 grundades första företaget här. Idén kläcktes på en servett över en kopp kaffe.",
+                category: .historical,
+                latitude: workPosition.latitude - 15 * degPerMeterLat,
+                longitude: workPosition.longitude
+            ),
+            EchoMemory(
+                title: "Ljuset i fönstret",
+                story: "Varje natt klockan 03:00 tänds ett ljus i ett tomt kontor. Ingen vet vem som är där.",
+                category: .mysterious,
+                latitude: workPosition.latitude,
+                longitude: workPosition.longitude - 15 * degPerMeterLon
+            )
+        ]
+
+        let demoTitles = Set(demoEchoes.map { $0.title })
+        let allMemories = (try? context.fetch(FetchDescriptor<EchoMemory>())) ?? []
+        let existingDemos = allMemories.filter { demoTitles.contains($0.title) }
+
+        // Städa legacy-echoes från tidigare seed-omgångar (Linköpings centrum-data).
+        let legacyTitles: Set<String> = [
+            "Stångåns viskningar",
+            "Slottet i skuggorna",
+            "Stortorgets år",
+            "Sommaren -98"
+        ]
+        let legacyEchoes = allMemories.filter { legacyTitles.contains($0.title) }
+
+        let workCLLocation = CLLocation(latitude: workPosition.latitude, longitude: workPosition.longitude)
+        let allUpToDate = legacyEchoes.isEmpty
+            && existingDemos.count == demoEchoes.count
+            && existingDemos.allSatisfy { memory in
+                let memoryLocation = CLLocation(latitude: memory.latitude, longitude: memory.longitude)
+                return workCLLocation.distance(from: memoryLocation) < 100
+            }
+        if allUpToDate { return }
+
+        existingDemos.forEach { context.delete($0) }
+        legacyEchoes.forEach { context.delete($0) }
+        demoEchoes.forEach { context.insert($0) }
+        try? context.save()
+        loadMemories(from: context)
     }
     #endif
 
     private func updateProximity(for userLocation: CLLocation) {
-        let distances = visibleMemories.map { pin -> Double in
+        var revealed: Set<UUID> = []
+        var distances: [Double] = []
+        for pin in visibleMemories {
             let pinLocation = CLLocation(latitude: pin.coordinate.latitude, longitude: pin.coordinate.longitude)
-            return userLocation.distance(from: pinLocation)
+            let distance = userLocation.distance(from: pinLocation)
+            distances.append(distance)
+            if distance <= Self.proximityRadiusMeters {
+                revealed.insert(pin.id)
+            }
         }
 
         distanceToNearestMemory = distances.min()
-        memoriesWithinRangeCount = distances.filter { $0 <= Self.proximityRadiusMeters }.count
+        memoriesWithinRangeCount = revealed.count
+        revealedPinIDs = revealed
     }
 
     func toggleCategory(_ category: MemoryCategory) {
@@ -121,63 +239,39 @@ class MapViewModel: ObservableObject {
     }
 
     func setupMap() {
-        // Permissions are requested during onboarding.
-        // Map only starts tracking if permission has already been granted.
+        // Idempotent: iOS ignorerar permission-request om redan svarat
+        locationService.requestLocationPermission()
         locationService.startTracking()
     }
 
+    /// Ökar `likes` med 1 på motsvarande EchoMemory.
+    @discardableResult
+    func likeEcho(_ pin: EchoPin, in context: ModelContext) -> Int? {
+        let pinID = pin.id
+        let descriptor = FetchDescriptor<EchoMemory>(predicate: #Predicate { $0.id == pinID })
+        guard let memory = (try? context.fetch(descriptor))?.first else { return nil }
+        memory.likes += 1
+        try? context.save()
+        return memory.likes
+    }
+
     func loadMemories(from context: ModelContext) {
-        #if DEBUG
-        seedLinkopingEchoesIfNeeded(in: context)
-        #endif
         let descriptor = FetchDescriptor<EchoMemory>()
         let memories = (try? context.fetch(descriptor)) ?? []
         hiddenMemories = memories.map { memory in
-            EchoPin(id: memory.id, coordinate: memory.coordinate, category: memory.category)
+            EchoPin(
+                id: memory.id,
+                coordinate: memory.coordinate,
+                category: memory.category,
+                title: memory.title,
+                story: memory.story,
+                date: memory.date,
+                imageName: memory.imageName
+            )
         }
         updateMonitoringForVisibleMemories()
-    }
-
-    #if DEBUG
-    private func seedLinkopingEchoesIfNeeded(in context: ModelContext) {
-        let allMemories = (try? context.fetch(FetchDescriptor<EchoMemory>())) ?? []
-        let hasLinkopingEchoes = allMemories.contains { memory in
-            abs(memory.latitude - 58.41) < 0.1 && abs(memory.longitude - 15.62) < 0.1
+        if let location = locationService.userLocation {
+            updateProximity(for: location)
         }
-        guard !hasLinkopingEchoes else { return }
-
-        let testEchoes = [
-            EchoMemory(
-                title: "Stångåns viskningar",
-                story: "Vid den här bänken vid Stångån satt jag och min mormor varje söndag och matade änderna.",
-                category: .family,
-                latitude: 58.4118,
-                longitude: 15.6260
-            ),
-            EchoMemory(
-                title: "Slottet i skuggorna",
-                story: "På 1700-talet sägs det att en grå dam vandrade här om nätterna. Folk gick andra vägen.",
-                category: .mysterious,
-                latitude: 58.4087,
-                longitude: 15.6190
-            ),
-            EchoMemory(
-                title: "Stortorgets år",
-                story: "Här stod tornet som föll 1812. Det berättas att marken fortfarande minns dånet.",
-                category: .historical,
-                latitude: 58.4109,
-                longitude: 15.6214
-            ),
-            EchoMemory(
-                title: "Sommaren -98",
-                story: "Min första kärlek bodde precis här borta. Vi cyklade förbi varje dag bara för att se varandra.",
-                category: .nostalgic,
-                latitude: 58.4125,
-                longitude: 15.6160
-            )
-        ]
-        testEchoes.forEach { context.insert($0) }
-        try? context.save()
     }
-    #endif
 }
