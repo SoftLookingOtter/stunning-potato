@@ -2,79 +2,54 @@
 //  ContentView.swift
 //  Echoes
 //
-//  Created by Sara Lindén on 2026-05-17.
+//  Updated by Sara Lindén on 2026-05-22.
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some View {
-        NavigationViewWrapper {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        if hasCompletedOnboarding {
+            TabView {
+                HomeView()
+                    .tabItem {
+                        Label("tab_home", systemImage: "house.fill")
                     }
-                }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+
+                MapView()
+                    .tabItem {
+                        Label("tab_map", systemImage: "map")
                     }
-                }
+
+                RecordView()
+                    .tabItem {
+                        Label("tab_record", systemImage: "mic.fill")
+                    }
+
+                RouteListView()
+                    .tabItem {
+                        Label {
+                            Text("tab_saved_echo")  // new localization key
+                            
+                        } icon: {
+                            Image(uiImage: .echoTabIcon)
+                        }
+                    }
+
+                ProfileView()
+                    .tabItem {
+                        Label("tab_profile", systemImage: "person")
+                    }
             }
+            .tint(AppColors.primary)
+        } else {
+            OnboardingView()
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
-}
-
-fileprivate struct NavigationViewWrapper<Content: View>: View {
-    let content: () -> Content
-
-    var body: some View {
-#if os(macOS)
-        NavigationSplitView {
-            content()
-        } detail: {
-            Text("Select an item")
-        }
-#else
-        content()
-#endif
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }

@@ -3,30 +3,42 @@
 //  Echoes
 //
 //  Created by Sara Lindén on 2026-05-17.
+//  Updated by Sara Lindén on 2026-05-18.
+//  Updated by Ibrahim on 2026-05-18. — Added ModelContainer + AuthViewModel
 //
 
 import SwiftUI
 import SwiftData
+import FirebaseCore
+
 
 @main
 struct EchoesApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+
+    @State private var auth = AuthViewModel()
+    @State private var audioService = AudioService()
+
+    init () {
+        FirebaseApp.configure()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if auth.isLoggedIn {
+                ContentView()
+                    .environment(auth)
+                    .environment(audioService)
+            } else {
+                LoginView(auth: auth)
+                    .environment(audioService)
+            }
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(for: [EchoMemory.self, AppUser.self, Route.self]) { result in
+            if case .success(let container) = result {
+                SeedDataService.seedIfNeeded(context: container.mainContext)
+                auth.restoreSession(context: container.mainContext)
+            }
+        }
     }
 }
